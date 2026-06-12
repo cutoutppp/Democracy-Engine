@@ -109,7 +109,6 @@ export default function Editor() {
     choice_a_text: '', choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
     choice_b_text: '', choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0,
   });
-  const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [errors, setErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -154,14 +153,6 @@ export default function Editor() {
     validateCard();
   }, [formData]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
   const handleCardSubmit = async (e) => {
     e.preventDefault();
     if (!validateCard()) return;
@@ -169,17 +160,8 @@ export default function Editor() {
     setSuccessMsg('');
 
     try {
-      let finalImageUrl = formData.image_url;
-      if (imageFile) {
-        const uploadData = new FormData();
-        uploadData.append('file', imageFile);
-        const uploadRes = await fetch('/api/upload', { method: 'POST', body: uploadData });
-        const uploadJson = await uploadRes.json();
-        if (uploadJson.url) finalImageUrl = uploadJson.url;
-      }
-
       const method = editingCardId ? 'PUT' : 'POST';
-      const bodyPayload = { ...formData, group_id: groupData.id, image_url: finalImageUrl };
+      const bodyPayload = { ...formData, group_id: groupData.id, image_url: formData.image_url };
       if (editingCardId) bodyPayload.id = editingCardId;
 
       const res = await fetch('/api/cards', {
@@ -208,7 +190,6 @@ export default function Editor() {
       choice_a_text: '', choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
       choice_b_text: '', choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0,
     });
-    setImageFile(null);
     setPreviewUrl(null);
   };
 
@@ -222,7 +203,6 @@ export default function Editor() {
       choice_b_legislative: card.choice_b_legislative, choice_b_executive: card.choice_b_executive, choice_b_judiciary: card.choice_b_judiciary, choice_b_military: card.choice_b_military,
     });
     setPreviewUrl(card.image_url);
-    setImageFile(null);
     setActiveTab('cards');
     window.scrollTo(0,0);
   };
@@ -276,11 +256,54 @@ export default function Editor() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'image_url') {
+      setPreviewUrl(value);
+    }
   };
 
   const handleSettingChange = (e) => {
     const { name, value } = e.target;
     setSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const base64String = canvas.toDataURL('image/jpeg', 0.6);
+        setPreviewUrl(base64String);
+        setFormData(prev => ({ ...prev, image_url: base64String }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const renderBalanceBar = (choice) => {
@@ -501,6 +524,7 @@ export default function Editor() {
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>รูปภาพประกอบ {editingCardId && '(ปล่อยว่างถ้าไม่ต้องการเปลี่ยนรูป)'}</label>
                 <input type="file" accept="image/*" onChange={handleImageChange} className="input-field" />
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>* ระบบจะทำการบีบอัดและฝังรูปภาพลงในเซิร์ฟเวอร์ให้อัตโนมัติ (ไม่ต้องไปฝากรูปที่อื่นแล้ว)</p>
               </div>
 
               <hr style={{ border: '1px solid rgba(255,255,255,0.1)', marginBottom: '2rem' }} />
