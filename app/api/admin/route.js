@@ -16,7 +16,7 @@ export async function POST(request) {
       
       const enhancedGroups = await Promise.all(groups.map(async g => {
         const row = await db.get('SELECT COUNT(*) as count FROM cards WHERE group_id = ?', [g.id]);
-        return { ...g, card_count: row ? row.count : 0 };
+        return { ...g, card_count: row ? Number(row.count) : 0 };
       }));
 
       return NextResponse.json({ groups: enhancedGroups });
