@@ -312,7 +312,10 @@ export default function Play() {
             </p>
           </div>
 
-          <button onClick={() => setGameState('menu')} className="btn-primary" style={{ width: '100%', marginBottom: '1.5rem', fontSize: '1.2rem' }}>เล่นเกมอื่น / เล่นอีกครั้ง</button>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', width: '100%' }}>
+            <button onClick={() => startGame()} className="btn-primary" style={{ flex: 1, fontSize: '1.1rem', background: '#3b82f6', padding: '10px' }}>🔄 เล่นอีกครั้ง</button>
+            <button onClick={() => setGameState('menu')} className="btn-primary" style={{ flex: 1, fontSize: '1.1rem', background: 'var(--secondary)', padding: '10px' }}>🏠 เล่นเกมอื่น</button>
+          </div>
           <Link href="/" style={{ display: 'block', color: 'var(--text-muted)', textDecoration: 'none' }}>
             &larr; กลับหน้าหลัก
           </Link>
