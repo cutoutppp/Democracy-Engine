@@ -197,3 +197,20 @@ h1, h2, h3, h4 {
   font-size: 3rem;
   margin-bottom: 0.5rem;
 }
+/* การปรับแต่งหน้าจอมือถือ (Mobile Responsive) */
+@media (max-width: 768px) {
+  .container { padding: 1rem; }
+  .pillars-container { padding: 0.5rem !important; margin-bottom: 1rem !important; }
+  .pillar-bar { width: 48% !important; padding: 0.4rem 0.5rem !important; margin-bottom: 0.5rem !important; border-radius: 8px !important; }
+  .pillar-icon { font-size: 1.2rem !important; margin-right: 0.4rem !important; }
+  .pillar-name, .pillar-value { font-size: 0.75rem !important; }
+  
+  .play-card-container { 
+    height: auto !important; 
+    min-height: 250px !important; 
+    max-height: 45vh !important; 
+  }
+  .play-choices-container { margin-top: 1rem !important; gap: 0.5rem !important; }
+  .play-choice-btn { padding: 1rem 0.5rem !important; }
+  .choice-text { font-size: 0.9rem !important; }
+}
