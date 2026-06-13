@@ -41,7 +41,6 @@ export async function GET(request) {
       cards = await db.all('SELECT * FROM cards ORDER BY created_at DESC');
     }
 
-    // แก้ไขตรงนี้ให้ส่งแค่ข้อมูล Array ตรงๆ
     return NextResponse.json(cards);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

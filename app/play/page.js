@@ -80,21 +80,34 @@ export default function Play() {
 
       const shuffled = [...cardsData].sort(() => 0.5 - Math.random());
       
-      // Universal First Card
-      const introCard = {
-        id: 'intro',
-        title: groupInfo.intro_title || 'วันแรกของการรับตำแหน่ง',
-        description: groupInfo.intro_desc || 'เลือกโหมดการเล่น: ปัดซ้าย (ปกติ) / ปัดขวา (ยาก)',
+      // Universal Mode Selection Card
+      const modeSelectCard = {
+        id: 'mode_select',
+        title: 'เลือกระดับความยาก',
+        description: 'ก่อนเริ่มการบริหารประเทศ กรุณาเลือกระดับความท้าทาย: โหมดปกติ หรือ โหมดยาก (เสาจะลดฮวบถ้าลบ)',
         card_type: 'resolution',
-        image_url: groupInfo.intro_image_url || '',
-        choice_a_text: groupInfo.intro_choice_a || 'โหมดปกติ',
+        image_url: '',
+        choice_a_text: '🟢 โหมดปกติ (Normal)',
         choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
-        choice_b_text: groupInfo.intro_choice_b || 'โหมดยาก (Hard Mode)',
+        choice_b_text: '🔥 โหมดยาก (Hard Mode)',
         choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0
       };
 
-      // Play max 20 cards total (1 intro + 19 random)
-      setCards([introCard, ...shuffled.slice(0, 19)]);
+      // Story Intro Card (From group settings)
+      const introCard = {
+        id: 'intro',
+        title: groupInfo.intro_title || 'วันแรกของการรับตำแหน่ง',
+        description: groupInfo.intro_desc || 'ยินดีด้วย! คุณได้รับเลือกให้เป็นผู้นำคนใหม่ บททดสอบกำลังจะเริ่มขึ้น คุณพร้อมหรือยัง?',
+        card_type: 'resolution',
+        image_url: groupInfo.bg_image_url || '',
+        choice_a_text: groupInfo.intro_choice_a || 'เริ่มบริหารประเทศ',
+        choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
+        choice_b_text: groupInfo.intro_choice_b || 'พร้อมลุย!',
+        choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0
+      };
+
+      // Play max 20 cards total (1 mode select + 1 intro + 18 random)
+      setCards([modeSelectCard, introCard, ...shuffled.slice(0, 18)]);
       
       setPillars({ legislative: 50, executive: 50, judiciary: 50, military: 50 });
       setIsHardMode(false);
@@ -116,13 +129,13 @@ export default function Play() {
     const card = cards[currentCardIndex];
     let p = { ...pillars };
 
-    // Set difficulty on intro card
-    if (card.id === 'intro') {
+    // Set difficulty on mode select card
+    if (card.id === 'mode_select') {
       setIsHardMode(choice === 'B');
     }
 
     // Ping API (silently)
-    if (card.id !== 'intro') {
+    if (card.id !== 'intro' && card.id !== 'mode_select') {
       fetch('/api/cards/stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -260,9 +273,9 @@ export default function Play() {
             </form>
           </div>
 
-          <Link href="/" style={{ display: 'inline-block', marginTop: '2rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
+          <a href="/" style={{ display: 'inline-block', marginTop: '2rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
             &larr; กลับหน้าหลัก
-          </Link>
+          </a>
         </div>
       </div>
     );
@@ -325,10 +338,13 @@ export default function Play() {
             </p>
           </div>
 
-          <button onClick={() => setGameState('menu')} className="btn-primary" style={{ width: '100%', marginBottom: '1.5rem', fontSize: '1.2rem' }}>เล่นเกมอื่น / เล่นอีกครั้ง</button>
-          <Link href="/" style={{ display: 'block', color: 'var(--text-muted)', textDecoration: 'none' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', width: '100%' }}>
+            <button onClick={() => startGame()} className="btn-primary" style={{ flex: 1, fontSize: '1.1rem', background: '#3b82f6', padding: '10px' }}>🔄 เล่นอีกครั้ง</button>
+            <button onClick={() => setGameState('menu')} className="btn-primary" style={{ flex: 1, fontSize: '1.1rem', background: 'var(--secondary)', padding: '10px' }}>🏠 เล่นเกมอื่น</button>
+          </div>
+          <a href="/" style={{ display: 'block', color: 'var(--text-muted)', textDecoration: 'none' }}>
             &larr; กลับหน้าหลัก
-          </Link>
+          </a>
         </div>
       </div>
     );
@@ -373,7 +389,7 @@ export default function Play() {
       `}} />
 
       {/* 4 Pillars Header */}
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '600px', padding: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '2rem' }}>
+      <div className="glass-panel pillars-container" style={{ width: '100%', maxWidth: '600px', padding: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <PillarBar name={groupData?.pillar_1_name || 'สภา'} value={pillars.legislative} color="var(--legislative-color)" icon={groupData?.pillar_1_icon || '🏛️'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_legislative : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_legislative : 0} />
         <PillarBar name={groupData?.pillar_2_name || 'บริหาร'} value={pillars.executive} color="var(--executive-color)" icon={groupData?.pillar_2_icon || '💼'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_executive : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_executive : 0} />
         <PillarBar name={groupData?.pillar_3_name || 'ศาล'} value={pillars.judiciary} color="var(--judiciary-color)" icon={groupData?.pillar_3_icon || '⚖️'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_judiciary : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_judiciary : 0} />
@@ -384,7 +400,7 @@ export default function Play() {
 
       {/* The Card */}
       <div 
-        className={`glass-panel ${animateDir}`} 
+        className={`glass-panel play-card-container ${animateDir}`} 
         onMouseDown={handleDragStart}
         onMouseMove={handleDragMove}
         onMouseUp={handleDragEnd}
@@ -439,27 +455,27 @@ export default function Play() {
       </div>
 
       {/* Choices Buttons (Simulating Swipe) */}
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', width: '100%', maxWidth: '600px' }}>
+      <div className="play-choices-container" style={{ display: 'flex', gap: '1rem', marginTop: '2rem', width: '100%', maxWidth: '600px' }}>
         <button 
           onClick={() => handleChoice('A')}
           onMouseEnter={() => setHoverChoice('A')}
           onMouseLeave={() => setHoverChoice(null)}
-          className="glass-panel"
+          className="glass-panel play-choice-btn"
           style={{ flex: 1, padding: '1.5rem', borderLeft: '4px solid #60a5fa', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', color: 'white', background: hoverChoice === 'A' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(15, 23, 42, 0.6)' }}
         >
           <div style={{ color: '#60a5fa', marginBottom: '0.5rem', fontSize: '0.8rem' }}>&larr; ปัดซ้าย</div>
-          <div style={{ fontWeight: 'bold' }}>{currentCard?.choice_a_text}</div>
+          <div className="choice-text" style={{ fontWeight: 'bold' }}>{currentCard?.choice_a_text}</div>
         </button>
 
         <button 
           onClick={() => handleChoice('B')}
           onMouseEnter={() => setHoverChoice('B')}
           onMouseLeave={() => setHoverChoice(null)}
-          className="glass-panel"
+          className="glass-panel play-choice-btn"
           style={{ flex: 1, padding: '1.5rem', borderRight: '4px solid #a78bfa', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', color: 'white', background: hoverChoice === 'B' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(15, 23, 42, 0.6)' }}
         >
           <div style={{ color: '#a78bfa', marginBottom: '0.5rem', fontSize: '0.8rem' }}>ปัดขวา &rarr;</div>
-          <div style={{ fontWeight: 'bold' }}>{currentCard?.choice_b_text}</div>
+          <div className="choice-text" style={{ fontWeight: 'bold' }}>{currentCard?.choice_b_text}</div>
         </button>
       </div>
 
@@ -469,8 +485,8 @@ export default function Play() {
 
 function PillarBar({ name, value, color, icon, impact }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', width: '48%', marginBottom: '1rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 1rem', borderRadius: '12px' }}>
-      <div style={{ fontSize: '1.5rem', marginRight: '0.8rem', position: 'relative' }}>
+    <div className="pillar-bar" style={{ display: 'flex', alignItems: 'center', width: '48%', marginBottom: '1rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 1rem', borderRadius: '12px' }}>
+      <div className="pillar-icon" style={{ fontSize: '1.5rem', marginRight: '0.8rem', position: 'relative' }}>
         {icon}
         {impact !== 0 && impact !== undefined && impact !== null && (
           <div style={{
@@ -486,8 +502,8 @@ function PillarBar({ name, value, color, icon, impact }) {
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{name}</span>
-          <span style={{ fontSize: '0.85rem', color: color }}>{value}%</span>
+          <span className="pillar-name" style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{name}</span>
+          <span className="pillar-value" style={{ fontSize: '0.85rem', color: color }}>{value}%</span>
         </div>
         <div style={{ 
           width: '100%', 
