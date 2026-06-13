@@ -656,7 +656,7 @@ export default function Editor() {
         <div className="glass-panel animate-fade-in" style={{ padding: '2rem' }}>
           
           {/* Top Actions: Test & Publish */}
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem', padding: '1.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', alignItems: 'center' }}>
+          <div className="manage-header" style={{ display: 'flex', gap: '1rem', marginBottom: '3rem', padding: '1.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: 1 }}>
               <h3 style={{ margin: '0 0 0.5rem 0' }}>จัดการผลงานของคุณ</h3>
               <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>ทดลองเล่นเกมที่สร้างขึ้น และเผยแพร่ให้เพื่อนๆ เล่น</p>

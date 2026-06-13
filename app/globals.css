@@ -138,6 +138,8 @@ body {
   .choice-text { font-size: 0.9rem !important; }
 
   /* สำหรับย่อขนาดหน้าตั้งค่าใน Editor */
+  .manage-header { flex-direction: column !important; align-items: stretch !important; gap: 0.5rem !important; }
+  .manage-header button { width: 100% !important; margin-top: 0.5rem; }
   .settings-panel { padding: 1rem !important; }
   .settings-panel h2 { font-size: 1.3rem !important; margin-bottom: 1rem !important; }
   .settings-panel h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
