@@ -154,13 +154,7 @@ export default function Editor() {
     validateCard();
   }, [formData]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
+
 
   const handleCardSubmit = async (e) => {
     e.preventDefault();
