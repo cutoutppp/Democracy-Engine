@@ -268,8 +268,19 @@ export default function Editor() {
   };
 
   const publishGame = async () => {
+    const crisisCount = cardsList.filter(c => c.card_type === 'crisis').length;
+    const resolutionCount = cardsList.filter(c => c.card_type === 'resolution').length;
+
     if (cardsCount < 30) {
-      alert('ต้องสร้างการ์ดให้อย่างน้อย 30 ใบก่อนถึงจะเผยแพร่ได้ครับ');
+      alert(`ต้องสร้างการ์ดรวมทั้งหมดอย่างน้อย 30 ใบ (ตอนนี้มี ${cardsCount} ใบ)`);
+      return;
+    }
+    if (crisisCount < 20) {
+      alert(`ต้องมี 🔴 การ์ดวิกฤต (Crisis) อย่างน้อย 20 ใบ (ตอนนี้มี ${crisisCount} ใบ)`);
+      return;
+    }
+    if (resolutionCount < 10) {
+      alert(`ต้องมี 🟡 การ์ดโอกาส/ทางออก (Resolution) อย่างน้อย 10 ใบ (ตอนนี้มี ${resolutionCount} ใบ)`);
       return;
     }
     if (!confirm('คุณแน่ใจหรือไม่ว่าจะเผยแพร่เกมนี้? (เผยแพร่แล้วเพื่อนกลุ่มอื่นจะเห็นเกมของคุณ)')) return;
@@ -633,7 +644,7 @@ export default function Editor() {
             )}
           </div>
 
-          <div style={{ marginBottom: '3rem', padding: '2rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+          <div className="settings-panel" style={{ marginBottom: '3rem', padding: '2rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
             <h2 style={{ marginBottom: '2rem', textAlign: 'center' }}>ตั้งค่าเกม: ฉากจบและเครดิตผู้สร้าง</h2>
             {settingSuccess && <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid var(--success)', color: '#6ee7b7' }}>✅ {settingSuccess}</div>}
             <form onSubmit={handleSettingsSubmit}>
@@ -723,7 +734,7 @@ export default function Editor() {
               </div>
 
               <div className="grid-2">
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_1_color || 'var(--legislative-color)'}` }}>
+                <div className="settings-pillar-box" style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_1_color || 'var(--legislative-color)'}` }}>
                   <h3>เสาที่ 1</h3>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                     <input type="text" name="pillar_1_icon" value={settings.pillar_1_icon || ''} onChange={handleSettingChange} className="input-field" style={{ width: '60px', textAlign: 'center' }} placeholder="ไอคอน" />
@@ -734,7 +745,7 @@ export default function Editor() {
                     <span style={{ fontSize: '0.85rem' }}>สีประจำเสา</span>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_2_color || 'var(--executive-color)'}` }}>
+                <div className="settings-pillar-box" style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_2_color || 'var(--executive-color)'}` }}>
                   <h3>เสาที่ 2</h3>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                     <input type="text" name="pillar_2_icon" value={settings.pillar_2_icon || ''} onChange={handleSettingChange} className="input-field" style={{ width: '60px', textAlign: 'center' }} placeholder="ไอคอน" />
@@ -745,7 +756,7 @@ export default function Editor() {
                     <span style={{ fontSize: '0.85rem' }}>สีประจำเสา</span>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_3_color || 'var(--judiciary-color)'}` }}>
+                <div className="settings-pillar-box" style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_3_color || 'var(--judiciary-color)'}` }}>
                   <h3>เสาที่ 3</h3>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                     <input type="text" name="pillar_3_icon" value={settings.pillar_3_icon || ''} onChange={handleSettingChange} className="input-field" style={{ width: '60px', textAlign: 'center' }} placeholder="ไอคอน" />
@@ -756,7 +767,7 @@ export default function Editor() {
                     <span style={{ fontSize: '0.85rem' }}>สีประจำเสา</span>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_4_color || 'var(--military-color)'}` }}>
+                <div className="settings-pillar-box" style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', borderTop: `3px solid ${settings.pillar_4_color || 'var(--military-color)'}` }}>
                   <h3>เสาที่ 4</h3>
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                     <input type="text" name="pillar_4_icon" value={settings.pillar_4_icon || ''} onChange={handleSettingChange} className="input-field" style={{ width: '60px', textAlign: 'center' }} placeholder="ไอคอน" />
