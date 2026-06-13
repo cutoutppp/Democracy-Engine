@@ -7,18 +7,16 @@ export default function Editor() {
   const [groupData, setGroupData] = useState(null);
   const [cardsCount, setCardsCount] = useState(0);
   const [cardsList, setCardsList] = useState([]);
-  const [activeTab, setActiveTab] = useState('cards'); // 'cards', 'gallery'
+  const [activeTab, setActiveTab] = useState('cards'); // 'cards', 'gallery', 'settings'
   
-  // Login & Project Selection State
   const [allProjects, setAllProjects] = useState([]);
-  const [showLoginModal, setShowLoginModal] = useState(null); // group obj
+  const [showLoginModal, setShowLoginModal] = useState(null); 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   
   const [createData, setCreateData] = useState({ name: '', game_title: '', password: '' });
 
-  // Fetch all projects on mount
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/groups?all=true');
@@ -102,19 +100,18 @@ export default function Editor() {
     setShowCreateModal(false);
   };
 
-  // Card Form State
   const [editingCardId, setEditingCardId] = useState(null);
   const [formData, setFormData] = useState({
     title: '', description: '', card_type: 'crisis', image_url: '',
     choice_a_text: '', choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
     choice_b_text: '', choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0,
   });
+  const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [errors, setErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Group Settings State (Endings & Credits)
   const [settings, setSettings] = useState({});
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingSuccess, setSettingSuccess] = useState('');
@@ -153,6 +150,46 @@ export default function Editor() {
     validateCard();
   }, [formData]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const base64String = canvas.toDataURL('image/jpeg', 0.6);
+        setPreviewUrl(base64String);
+        setFormData(prev => ({ ...prev, image_url: base64String }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCardSubmit = async (e) => {
     e.preventDefault();
     if (!validateCard()) return;
@@ -190,6 +227,7 @@ export default function Editor() {
       choice_a_text: '', choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
       choice_b_text: '', choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0,
     });
+    setImageFile(null);
     setPreviewUrl(null);
   };
 
@@ -203,6 +241,7 @@ export default function Editor() {
       choice_b_legislative: card.choice_b_legislative, choice_b_executive: card.choice_b_executive, choice_b_judiciary: card.choice_b_judiciary, choice_b_military: card.choice_b_military,
     });
     setPreviewUrl(card.image_url);
+    setImageFile(null);
     setActiveTab('cards');
     window.scrollTo(0,0);
   };
@@ -266,46 +305,6 @@ export default function Editor() {
     setSettings(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        const MAX_HEIGHT = 600;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const base64String = canvas.toDataURL('image/jpeg', 0.6);
-        setPreviewUrl(base64String);
-        setFormData(prev => ({ ...prev, image_url: base64String }));
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
   const renderBalanceBar = (choice) => {
     const maxAllowed = formData.card_type === 'resolution' ? 20 : 10;
     const prefix = choice === 'A' ? 'choice_a' : 'choice_b';
@@ -362,7 +361,6 @@ export default function Editor() {
           <p style={{ textAlign: 'center', marginBottom: '3rem', color: 'var(--text-muted)' }}>เลือกโปรเจกต์ของคุณเพื่อเข้าสู่ห้องออกแบบ หรือสร้างโปรเจกต์ใหม่</p>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-            {/* Create New Project Button */}
             <button 
               onClick={() => { setShowCreateModal(true); setLoginError(''); setCreateData({name:'', game_title:'', password:''}); }}
               className="glass-panel flex-center"
@@ -372,7 +370,6 @@ export default function Editor() {
               <span style={{ fontWeight: 'bold' }}>สร้างโปรเจกต์ใหม่</span>
             </button>
 
-            {/* Existing Projects */}
             {allProjects.map(proj => (
               <div 
                 key={proj.id} 
@@ -398,7 +395,6 @@ export default function Editor() {
           </div>
         </div>
 
-        {/* Login Modal */}
         {showLoginModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
@@ -419,7 +415,6 @@ export default function Editor() {
           </div>
         )}
 
-        {/* Create Modal */}
         {showCreateModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem' }}>
@@ -440,9 +435,7 @@ export default function Editor() {
                   type="password" placeholder="เพื่อป้องกันกลุ่มอื่นเข้ามาแก้ไข" className="input-field" 
                   value={createData.password} onChange={e => setCreateData({...createData, password: e.target.value})} required 
                 />
-                
                 {loginError && <p style={{ color: 'var(--danger)', marginTop: '0.5rem' }}>{loginError}</p>}
-                
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
                   <button type="button" onClick={() => setShowCreateModal(false)} className="btn-primary" style={{ background: 'var(--secondary)' }}>ยกเลิก</button>
                   <button type="submit" className="btn-primary" style={{ flex: 1 }}>สร้างโปรเจกต์</button>
@@ -476,12 +469,15 @@ export default function Editor() {
         <button onClick={() => window.location.reload()} className="btn-primary" style={{ background: 'var(--danger)' }}>ออกจากระบบ</button>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-        <button onClick={() => {setActiveTab('cards'); resetCardForm();}} className={`btn-primary`} style={{ background: activeTab === 'cards' && !editingCardId ? 'var(--primary)' : 'rgba(255,255,255,0.1)' }}>
-          + สร้างการ์ดใหม่
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <button onClick={() => {setActiveTab('cards'); resetCardForm();}} className={`btn-primary`} style={{ flex: 1, minWidth: '100px', padding: '10px 5px', fontSize: '0.85rem', background: activeTab === 'cards' && !editingCardId ? 'var(--primary)' : 'rgba(255,255,255,0.1)' }}>
+          ➕ สร้างการ์ด
         </button>
-        <button onClick={() => setActiveTab('gallery')} className={`btn-primary`} style={{ background: activeTab === 'gallery' || editingCardId ? 'var(--primary)' : 'rgba(255,255,255,0.1)' }}>
-          📚 คลังการ์ด / ตั้งค่าเกม / เผยแพร่
+        <button onClick={() => {setActiveTab('gallery'); setEditingCardId(null);}} className={`btn-primary`} style={{ flex: 1, minWidth: '100px', padding: '10px 5px', fontSize: '0.85rem', background: activeTab === 'gallery' && !editingCardId ? 'var(--primary)' : 'rgba(255,255,255,0.1)' }}>
+          📚 คลังการ์ด
+        </button>
+        <button onClick={() => {setActiveTab('settings'); setEditingCardId(null);}} className={`btn-primary`} style={{ flex: 1, minWidth: '100px', padding: '10px 5px', fontSize: '0.85rem', background: activeTab === 'settings' ? 'var(--primary)' : 'rgba(255,255,255,0.1)' }}>
+          ⚙️ ตั้งค่าเกม/เผยแพร่
         </button>
       </div>
 
@@ -529,7 +525,6 @@ export default function Editor() {
 
               <hr style={{ border: '1px solid rgba(255,255,255,0.1)', marginBottom: '2rem' }} />
 
-              {/* Choice A with Sliders */}
               <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                 <h3 style={{ color: '#60a5fa' }}>ตัวเลือก A (ปัดซ้าย)</h3>
                 <input type="text" name="choice_a_text" value={formData.choice_a_text} onChange={handleInputChange} className="input-field" required placeholder="ข้อความตัวเลือก เช่น ใช้ความรุนแรงปราบปราม" style={{ marginBottom: '1.5rem' }} />
@@ -541,7 +536,6 @@ export default function Editor() {
                 {renderBalanceBar('A')}
               </div>
 
-              {/* Choice B with Sliders */}
               <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                 <h3 style={{ color: '#a78bfa' }}>ตัวเลือก B (ปัดขวา)</h3>
                 <input type="text" name="choice_b_text" value={formData.choice_b_text} onChange={handleInputChange} className="input-field" required placeholder="ข้อความตัวเลือก เช่น ยอมเจรจาและเพิ่มค่าแรง" style={{ marginBottom: '1.5rem' }} />
@@ -574,7 +568,6 @@ export default function Editor() {
             </form>
           </div>
 
-          {/* Live Preview */}
           <div style={{ position: 'sticky', top: '2rem', height: 'fit-content' }}>
             <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Live Preview</h3>
             <div className="glass-panel" style={{ width: '320px', height: '480px', margin: '0 auto', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: formData.card_type === 'crisis' ? `2px solid ${settings.crisis_color || '#ef4444'}` : `2px solid ${settings.resolution_color || '#eab308'}` }}>
@@ -601,12 +594,11 @@ export default function Editor() {
             </div>
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'settings' ? (
         <div className="glass-panel animate-fade-in" style={{ padding: '2rem' }}>
           
-          {/* Top Actions: Test & Publish */}
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem', padding: '1.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem', padding: '1.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
               <h3 style={{ margin: '0 0 0.5rem 0' }}>จัดการผลงานของคุณ</h3>
               <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>ทดลองเล่นเกมที่สร้างขึ้น และเผยแพร่ให้เพื่อนๆ เล่น</p>
             </div>
@@ -641,7 +633,6 @@ export default function Editor() {
             )}
           </div>
 
-          {/* Group Settings: Title, Endings & Credits */}
           <div style={{ marginBottom: '3rem', padding: '2rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
             <h2 style={{ marginBottom: '2rem', textAlign: 'center' }}>ตั้งค่าเกม: ฉากจบและเครดิตผู้สร้าง</h2>
             {settingSuccess && <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid var(--success)', color: '#6ee7b7' }}>✅ {settingSuccess}</div>}
@@ -783,7 +774,9 @@ export default function Editor() {
               </button>
             </form>
           </div>
-
+        </div>
+      ) : (
+        <div className="glass-panel animate-fade-in" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <h2 style={{ margin: 0 }}>คลังการ์ดทั้งหมด ({cardsList.length}/30 ขั้นต่ำ)</h2>
           </div>
@@ -801,7 +794,7 @@ export default function Editor() {
                     <div style={{ height: '120px', background: 'rgba(0,0,0,0.5)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
                       {card.image_url ? <img src={card.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>[No Image]</div>}
                     </div>
-                    <h4 style={{ margin: 0 }}>{card.title}</h4>
+                    <h4 style={{ margin: '0 0 0.5rem 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.title}</h4>
                     <div style={{ marginTop: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', padding: '0.5rem', fontSize: '0.8rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <span style={{ color: '#60a5fa' }}>👈 เลือก A: {card.stats_a || 0}</span>
@@ -827,7 +820,7 @@ export default function Editor() {
                     <div style={{ height: '120px', background: 'rgba(0,0,0,0.5)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
                       {card.image_url ? <img src={card.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>[No Image]</div>}
                     </div>
-                    <h4 style={{ margin: 0 }}>{card.title}</h4>
+                    <h4 style={{ margin: '0 0 0.5rem 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.title}</h4>
                     <div style={{ marginTop: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', padding: '0.5rem', fontSize: '0.8rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <span style={{ color: '#60a5fa' }}>👈 เลือก A: {card.stats_a || 0}</span>
