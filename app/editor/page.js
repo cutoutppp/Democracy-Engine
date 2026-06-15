@@ -134,17 +134,20 @@ export default function Editor() {
 
   const validateCard = () => {
     const errs = [];
-    const maxAllowed = formData.card_type === 'resolution' ? 20 : 10;
+    const maxSum = formData.card_type === 'resolution' ? 20 : 10;
+    const maxIndividual = formData.card_type === 'resolution' ? 30 : 20; // จำกัดค่าสูงสุด/ต่ำสุดรายเสา
 
     const aValues = [formData.choice_a_legislative, formData.choice_a_executive, formData.choice_a_judiciary, formData.choice_a_military];
     const aSum = aValues.reduce((a,b) => a + Number(b), 0);
     if (!aValues.some(v => Number(v) < 0)) errs.push('ตัวเลือก A ต้องมีคนเสียผลประโยชน์ (มีค่าติดลบ)');
-    if (aSum > maxAllowed) errs.push(`ผลรวมตัวเลขตัวเลือก A ต้องไม่เกิน +${maxAllowed} (ปัจจุบัน: ${aSum})`);
+    if (aSum > maxSum) errs.push(`ผลรวมตัวเลขตัวเลือก A ต้องไม่เกิน +${maxSum} (ปัจจุบัน: ${aSum})`);
+    if (aValues.some(v => Math.abs(Number(v)) > maxIndividual)) errs.push(`ตัวเลือก A ใส่ค่าเกินกำหนด! (ใส่ได้สูงสุดไม่เกิน +/- ${maxIndividual})`);
 
     const bValues = [formData.choice_b_legislative, formData.choice_b_executive, formData.choice_b_judiciary, formData.choice_b_military];
     const bSum = bValues.reduce((a,b) => a + Number(b), 0);
     if (!bValues.some(v => Number(v) < 0)) errs.push('ตัวเลือก B ต้องมีคนเสียผลประโยชน์ (มีค่าติดลบ)');
-    if (bSum > maxAllowed) errs.push(`ผลรวมตัวเลขตัวเลือก B ต้องไม่เกิน +${maxAllowed} (ปัจจุบัน: ${bSum})`);
+    if (bSum > maxSum) errs.push(`ผลรวมตัวเลขตัวเลือก B ต้องไม่เกิน +${maxSum} (ปัจจุบัน: ${bSum})`);
+    if (bValues.some(v => Math.abs(Number(v)) > maxIndividual)) errs.push(`ตัวเลือก B ใส่ค่าเกินกำหนด! (ใส่ได้สูงสุดไม่เกิน +/- ${maxIndividual})`);
 
     setErrors(errs);
     return errs.length === 0;
