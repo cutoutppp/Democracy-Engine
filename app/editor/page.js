@@ -135,7 +135,7 @@ export default function Editor() {
   const validateCard = () => {
     const errs = [];
     const maxSum = formData.card_type === 'resolution' ? 20 : 10;
-    const maxIndividual = formData.card_type === 'resolution' ? 30 : 20; // จำกัดค่าสูงสุด/ต่ำสุดรายเสา
+    const maxIndividual = formData.card_type === 'resolution' ? (groupData?.max_resolution_val || 30) : (groupData?.max_crisis_val || 20); // จำกัดค่าสูงสุด/ต่ำสุดรายเสา
 
     const aValues = [formData.choice_a_legislative, formData.choice_a_executive, formData.choice_a_judiciary, formData.choice_a_military];
     const aSum = aValues.reduce((a,b) => a + Number(b), 0);
@@ -379,7 +379,9 @@ export default function Editor() {
     );
   };
 
-  const renderSlider = (label, name, color) => (
+  const renderSlider = (label, name, color) => {
+    const maxVal = formData.card_type === 'resolution' ? (groupData.max_resolution_val || 30) : (groupData.max_crisis_val || 20);
+    return (
     <div style={{ marginBottom: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', alignItems: 'center' }}>
         <label style={{ fontSize: '0.85rem', color, fontWeight: 'bold' }}>{label}</label>
@@ -398,12 +400,12 @@ export default function Editor() {
         </div>
       </div>
       <input 
-        type="range" min="-30" max="30" step="1" 
+        type="range" min={`-${maxVal}`} max={maxVal} step="1" 
         name={name} value={formData[name]} onChange={handleInputChange} 
         style={{ width: '100%', accentColor: color }}
       />
     </div>
-  );
+  )};
 
   if (!groupData) {
     return (

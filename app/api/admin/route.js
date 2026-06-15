@@ -5,7 +5,8 @@ const MASTER_PASSWORD = 'cutout067'; // Set by the user
 
 export async function POST(request) {
   try {
-    const { action, password, target_id, target_password } = await request.json();
+    const body = await request.json();
+    const { action, password, target_id, target_password, max_crisis_val, max_resolution_val } = body;
 
     if (password !== MASTER_PASSWORD) {
       return NextResponse.json({ error: 'รหัสผ่าน Admin ไม่ถูกต้อง' }, { status: 401 });
@@ -32,6 +33,14 @@ export async function POST(request) {
     if (action === 'reset_password') {
       if (!target_password || !target_id) return NextResponse.json({ error: 'Missing target_password or target_id' }, { status: 400 });
       await db.run('UPDATE groups SET password = ? WHERE id = ?', [target_password, target_id]);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'update_limits') {
+      if (!target_id || max_crisis_val === undefined || max_resolution_val === undefined) {
+        return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+      }
+      await db.run('UPDATE groups SET max_crisis_val = ?, max_resolution_val = ? WHERE id = ?', [max_crisis_val, max_resolution_val, target_id]);
       return NextResponse.json({ success: true });
     }
 

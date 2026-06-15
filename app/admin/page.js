@@ -9,6 +9,35 @@ export default function AdminDashboard() {
   const [groups, setGroups] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [editingLimitsFor, setEditingLimitsFor] = useState(null);
+  const [limitForm, setLimitForm] = useState({ max_crisis_val: 20, max_resolution_val: 30 });
+
+  const updateLimits = async (e) => {
+    e.preventDefault();
+    if (!editingLimitsFor) return;
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'update_limits', 
+          password, 
+          target_id: editingLimitsFor.id,
+          max_crisis_val: limitForm.max_crisis_val,
+          max_resolution_val: limitForm.max_resolution_val
+        })
+      });
+      if (res.ok) {
+        setGroups(groups.map(g => g.id === editingLimitsFor.id ? { ...g, max_crisis_val: limitForm.max_crisis_val, max_resolution_val: limitForm.max_resolution_val } : g));
+        setEditingLimitsFor(null);
+        alert('อัปเดตลิมิตคะแนนสำเร็จ!');
+      } else {
+        alert('เกิดข้อผิดพลาดในการอัปเดต');
+      }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    }
+  };
 
   const login = async (e) => {
     e.preventDefault();
@@ -140,6 +169,10 @@ export default function AdminDashboard() {
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                   <a href={`/play?group=${encodeURIComponent(g.name)}`} target="_blank" className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#3b82f6', textDecoration: 'none' }}>เล่นเกม</a>
+                  <button onClick={() => {
+                    setEditingLimitsFor(g);
+                    setLimitForm({ max_crisis_val: g.max_crisis_val || 20, max_resolution_val: g.max_resolution_val || 30 });
+                  }} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#10b981' }}>ตั้งค่า</button>
                   <button onClick={() => resetPassword(g.id, g.name)} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#f59e0b' }}>เปลี่ยนรหัส</button>
                   <button onClick={() => deleteGroup(g.id, g.name)} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#ef4444' }}>ลบกลุ่ม</button>
                 </td>
@@ -153,6 +186,36 @@ export default function AdminDashboard() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit Limits Modal */}
+      {editingLimitsFor && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
+            <h2 style={{ marginBottom: '1rem', textAlign: 'center', color: '#60a5fa' }}>ตั้งค่าเพดานคะแนน</h2>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginBottom: '2rem' }}>กลุ่ม: {editingLimitsFor.game_title || editingLimitsFor.name}</p>
+            <form onSubmit={updateLimits}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem' }}>🔴 เพดานคะแนนการ์ดวิกฤต (Crisis)</label>
+                <input 
+                  type="number" min="5" max="100" className="input-field" 
+                  value={limitForm.max_crisis_val} onChange={e => setLimitForm({...limitForm, max_crisis_val: parseInt(e.target.value) || 20})} required 
+                />
+              </div>
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem' }}>🟡 เพดานคะแนนการ์ดโอกาส (Resolution)</label>
+                <input 
+                  type="number" min="5" max="100" className="input-field" 
+                  value={limitForm.max_resolution_val} onChange={e => setLimitForm({...limitForm, max_resolution_val: parseInt(e.target.value) || 30})} required 
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="button" onClick={() => setEditingLimitsFor(null)} className="btn-primary" style={{ background: 'var(--secondary)' }}>ยกเลิก</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, background: '#10b981' }}>บันทึกค่า</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
