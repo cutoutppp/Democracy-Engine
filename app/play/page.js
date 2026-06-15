@@ -427,20 +427,10 @@ export default function Play() {
                      hoverChoice === 'B' ? 'rotate(3deg)' : 'none',
           cursor: isDragging ? 'grabbing' : 'grab',
           userSelect: 'none',
-          touchAction: 'none'
+          touchAction: 'pan-y'
         }}
       >
-        <div style={{ 
-          background: currentCard?.card_type === 'crisis' ? (groupData?.crisis_color || '#ef4444') : (groupData?.resolution_color || '#eab308'),
-          color: currentCard?.card_type === 'crisis' ? 'white' : 'black',
-          padding: '8px',
-          textAlign: 'center',
-          fontWeight: 'bold'
-        }}>
-          {currentCard?.card_type === 'crisis' ? 'วิกฤต (Crisis)' : 'โอกาส (Resolution)'}
-        </div>
-
-        <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <div style={{ flex: 1, minHeight: '150px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           {currentCard?.image_url ? (
             <img src={currentCard.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
@@ -448,7 +438,7 @@ export default function Play() {
           )}
         </div>
 
-        <div style={{ padding: '1.5rem', background: 'var(--bg-dark)', minHeight: '35%' }}>
+        <div style={{ padding: '1.5rem', background: 'var(--bg-dark)', flexShrink: 0 }}>
           <h2 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>{currentCard?.title}</h2>
           <p style={{ color: 'var(--text-muted)' }}>{currentCard?.description}</p>
         </div>

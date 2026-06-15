@@ -634,13 +634,10 @@ export default function Editor() {
           <div style={{ position: 'sticky', top: '2rem', height: 'fit-content' }}>
             <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>Live Preview</h3>
             <div className="glass-panel" style={{ width: '320px', height: '480px', margin: '0 auto', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: formData.card_type === 'crisis' ? `2px solid ${settings.crisis_color || '#ef4444'}` : `2px solid ${settings.resolution_color || '#eab308'}` }}>
-              <div style={{ background: formData.card_type === 'crisis' ? (settings.crisis_color || '#ef4444') : (settings.resolution_color || '#eab308'), color: formData.card_type === 'crisis' ? 'white' : 'black', padding: '4px 12px', fontSize: '0.8rem', fontWeight: 'bold', textAlign: 'center' }}>
-                {formData.card_type === 'crisis' ? 'CRISIS' : 'RESOLUTION'}
-              </div>
-              <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <div style={{ flex: 1, minHeight: '150px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {previewUrl ? <img src={previewUrl} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ color: 'var(--secondary)' }}>[ไม่มีรูปภาพ]</span>}
               </div>
-              <div style={{ padding: '1.5rem', background: 'var(--bg-dark)', minHeight: '40%' }}>
+              <div style={{ padding: '1.5rem', background: 'var(--bg-dark)', flexShrink: 0 }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>{formData.title || 'ชื่อเหตุการณ์...'}</h3>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{formData.description || 'คำอธิบายเหตุการณ์...'}</p>
               </div>

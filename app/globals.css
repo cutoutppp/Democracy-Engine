@@ -28,6 +28,9 @@ body {
   font-family: 'Inter', 'Sarabun', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Glassmorphism utilities */
@@ -232,3 +235,6 @@ h1, h2, h3, h4 {
   .play-choice-btn { padding: 1rem 0.5rem !important; }
   .choice-text { font-size: 0.9rem !important; }
 }
+
+.choice-text { white-space: pre-wrap; word-wrap: break-word; word-break: break-word; }
+.play-card-container h2, .play-card-container p { white-space: pre-wrap; word-wrap: break-word; word-break: break-word; }

@@ -29,9 +29,15 @@ export async function GET() {
         pillar_1_color TEXT,
         pillar_2_color TEXT,
         pillar_3_color TEXT,
-        pillar_4_color TEXT
+        pillar_4_color TEXT,
+        max_crisis_val INTEGER DEFAULT 20,
+        max_resolution_val INTEGER DEFAULT 30
       );
     `);
+
+    // Auto-migration for existing databases
+    try { await db.exec(`ALTER TABLE groups ADD COLUMN max_crisis_val INTEGER DEFAULT 20;`); } catch (e) {}
+    try { await db.exec(`ALTER TABLE groups ADD COLUMN max_resolution_val INTEGER DEFAULT 30;`); } catch (e) {}
 
     await db.exec(`
       CREATE TABLE IF NOT EXISTS cards (
