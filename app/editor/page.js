@@ -403,19 +403,21 @@ export default function Editor() {
     const prefix = choice === 'A' ? 'choice_a' : 'choice_b';
     const sum = Number(formData[`${prefix}_legislative`]) + Number(formData[`${prefix}_executive`]) + Number(formData[`${prefix}_judiciary`]) + Number(formData[`${prefix}_military`]);
     const isOver = sum > maxAllowed;
+    const isUnder = sum < -maxAllowed;
     const hasNegative = [formData[`${prefix}_legislative`], formData[`${prefix}_executive`], formData[`${prefix}_judiciary`], formData[`${prefix}_military`]].some(v => Number(v) < 0);
     const barWidth = Math.min(Math.max((sum + 30) / 60 * 100, 0), 100);
 
     return (
       <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.4)', borderRadius: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
-          <span>ผลรวมคะแนนสุทธิ (Net Impact): <strong>{sum > 0 ? `+${sum}` : sum}</strong> / {maxAllowed} MAX</span>
+          <span>ผลรวมคะแนนสุทธิ (Net Impact): <strong>{sum > 0 ? `+${sum}` : sum}</strong> (ลิมิต: -{maxAllowed} ถึง +{maxAllowed})</span>
           {!hasNegative && <span style={{ color: 'var(--danger)' }}>⚠️ ยังไม่มีค่าติดลบ</span>}
         </div>
         <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
-          <div style={{ width: `${barWidth}%`, height: '100%', background: isOver ? 'var(--danger)' : (sum > 0 ? '#fbbf24' : '#34d399'), transition: 'width 0.3s' }}></div>
+          <div style={{ width: `${barWidth}%`, height: '100%', background: (isOver || isUnder) ? 'var(--danger)' : (sum > 0 ? '#fbbf24' : '#34d399'), transition: 'width 0.3s' }}></div>
         </div>
-        {isOver && <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.5rem' }}>เกินเพดานที่กำหนด! ต้องลากเสาอื่นให้ติดลบเพื่อชดเชยสมดุล</div>}
+        {isOver && <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.5rem' }}>เกินเพดานบวก! ต้องลากเสาอื่นให้ติดลบเพื่อชดเชยสมดุล</div>}
+        {isUnder && <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.5rem' }}>เกินเพดานติดลบ! ต้องลากเสาอื่นให้เป็นบวกเพื่อชดเชยสมดุล</div>}
       </div>
     );
   };
@@ -622,6 +624,7 @@ export default function Editor() {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>รูปภาพประกอบ {editingCardId && '(ปล่อยว่างถ้าไม่ต้องการเปลี่ยนรูป)'}</label>
                 <input type="file" accept="image/*" onChange={handleImageChange} className="input-field" />
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>* ระบบจะทำการบีบอัดและฝังรูปภาพลงในเซิร์ฟเวอร์ให้อัตโนมัติ (ไม่ต้องไปฝากรูปที่อื่นแล้ว)</p>
+                <p style={{ fontSize: '0.8rem', color: '#fbbf24', marginTop: '0.2rem' }}>💡 <strong>เคล็ดลับ:</strong> คุณสามารถกด <strong>Ctrl+V</strong> เพื่อวางรูปภาพจาก Clipboard ในหน้านี้ได้ทันที</p>
               </div>
 
               <hr style={{ border: '1px solid rgba(255,255,255,0.1)', marginBottom: '2rem' }} />
