@@ -386,8 +386,17 @@ export default function Play() {
       height: '100vh',
       overflow: 'hidden',
       background: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url(${groupData.bg_image_url}) no-repeat center center fixed` : undefined,
-      backgroundSize: 'cover'
+      backgroundSize: 'cover',
+      position: 'relative'
     }}>
+      {/* Exit Button */}
+      <button 
+        onClick={() => { if(confirm('ต้องการออกจากเกมและกลับสู่เมนูหลักหรือไม่?')) setGameState('menu'); }}
+        style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', zIndex: 10 }}
+      >
+        &larr; ออกจากเกม
+      </button>
+
       {groupData && (
         <style dangerouslySetInnerHTML={{__html: `
           :root {
@@ -456,7 +465,7 @@ export default function Play() {
           touchAction: 'pan-y'
         }}
       >
-        <div style={{ flex: 1, minHeight: '150px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <div style={{ aspectRatio: '3/2', width: '100%', flexShrink: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           {currentCard?.image_url ? (
             <img src={currentCard?.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (

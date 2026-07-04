@@ -244,6 +244,10 @@ export default function Editor() {
         if (!editingCardId) {
           resetCardForm();
           window.scrollTo(0,0);
+        } else {
+          resetCardForm();
+          setActiveTab('gallery');
+          window.scrollTo(0,0);
         }
         fetchCards(groupData.id);
       }
