@@ -40,6 +40,7 @@ export default function Editor() {
   const [cardsCount, setCardsCount] = useState(0);
   const [cardsList, setCardsList] = useState([]);
   const [activeTab, setActiveTab] = useState('cards'); // 'cards', 'gallery'
+  const [isUploading, setIsUploading] = useState(false);
   
   // Cropper State
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, fieldName: null });
@@ -54,12 +55,37 @@ export default function Editor() {
   const handleCropSave = async () => {
     if (!cropModal.imageSrc || !croppedAreaPixels) return;
     try {
+      setIsUploading(true);
       const croppedImageBase64 = await getCroppedImg(cropModal.imageSrc, croppedAreaPixels);
+      
+      let finalImageUrl = croppedImageBase64;
+      const apiKey = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+      
+      if (apiKey) {
+        // Remove data URI prefix for ImgBB
+        const base64Data = croppedImageBase64.split(',')[1];
+        const formData = new FormData();
+        formData.append('image', base64Data);
+        
+        const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          finalImageUrl = uploadData.data.url;
+        } else {
+          console.error('ImgBB Upload Error:', uploadData);
+          alert('อัปโหลดรูปไม่สำเร็จ จะบันทึกเป็น Base64 แทน (กินพื้นที่)');
+        }
+      }
+
       if (cropModal.fieldName) {
-         setSettings(prev => ({ ...prev, [cropModal.fieldName]: croppedImageBase64 }));
+         setSettings(prev => ({ ...prev, [cropModal.fieldName]: finalImageUrl }));
       } else {
-         setPreviewUrl(croppedImageBase64);
-         setFormData(prev => ({ ...prev, image_url: croppedImageBase64 }));
+         setPreviewUrl(finalImageUrl);
+         setFormData(prev => ({ ...prev, image_url: finalImageUrl }));
       }
       setCropModal({ isOpen: false, imageSrc: null, fieldName: null });
       setCrop({ x: 0, y: 0 });
@@ -67,6 +93,8 @@ export default function Editor() {
     } catch(err) {
       console.error(err);
       alert('Error cropping image');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -982,7 +1010,9 @@ export default function Editor() {
             <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>ซูม:</span>
               <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} style={{ flex: 1 }} />
-              <button onClick={handleCropSave} className="btn-primary" style={{ padding: '0.5rem 1.5rem' }}>ยืนยัน</button>
+              <button onClick={handleCropSave} className="btn-primary" style={{ padding: '0.5rem 1.5rem' }} disabled={isUploading}>
+                {isUploading ? 'กำลังอัปโหลด...' : 'ยืนยัน'}
+              </button>
             </div>
           </div>
         </div>

@@ -108,8 +108,19 @@ export default function Play() {
       };
 
       // Play max 20 cards total (1 mode select + 1 intro + 18 random)
-      setCards([modeSelectCard, introCard, ...shuffled.slice(0, 18)]);
+      const gameCards = [modeSelectCard, introCard, ...shuffled.slice(0, 18)];
+      setCards(gameCards);
       
+      // Preload images in the background
+      setTimeout(() => {
+        gameCards.forEach(c => {
+          if (c.image_url && c.image_url.startsWith('http')) {
+            const img = new window.Image();
+            img.src = c.image_url;
+          }
+        });
+      }, 500);
+
       setPillars({ legislative: 50, executive: 50, judiciary: 50, military: 50 });
       setIsHardMode(false);
       setCurrentCardIndex(0);
