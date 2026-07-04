@@ -1,7 +1,39 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Cropper from 'react-easy-crop';
+
+const getCroppedImg = (imageSrc, pixelCrop) => {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+    image.src = imageSrc;
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(
+        image,
+        pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
+        0, 0, pixelCrop.width, pixelCrop.height
+      );
+      
+      const maxW = 600;
+      if (canvas.width > maxW) {
+         const scaleCanvas = document.createElement('canvas');
+         scaleCanvas.width = maxW;
+         scaleCanvas.height = maxW * (canvas.height/canvas.width);
+         const sctx = scaleCanvas.getContext('2d');
+         sctx.drawImage(canvas, 0, 0, scaleCanvas.width, scaleCanvas.height);
+         resolve(scaleCanvas.toDataURL('image/jpeg', 0.8));
+      } else {
+         resolve(canvas.toDataURL('image/jpeg', 0.8));
+      }
+    };
+    image.onerror = reject;
+  });
+};
 
 export default function Editor() {
   const [groupData, setGroupData] = useState(null);
@@ -9,6 +41,35 @@ export default function Editor() {
   const [cardsList, setCardsList] = useState([]);
   const [activeTab, setActiveTab] = useState('cards'); // 'cards', 'gallery'
   
+  // Cropper State
+  const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, fieldName: null });
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropSave = async () => {
+    if (!cropModal.imageSrc || !croppedAreaPixels) return;
+    try {
+      const croppedImageBase64 = await getCroppedImg(cropModal.imageSrc, croppedAreaPixels);
+      if (cropModal.fieldName) {
+         setSettings(prev => ({ ...prev, [cropModal.fieldName]: croppedImageBase64 }));
+      } else {
+         setPreviewUrl(croppedImageBase64);
+         setFormData(prev => ({ ...prev, image_url: croppedImageBase64 }));
+      }
+      setCropModal({ isOpen: false, imageSrc: null, fieldName: null });
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    } catch(err) {
+      console.error(err);
+      alert('Error cropping image');
+    }
+  };
+
   // Login & Project Selection State
   const [allProjects, setAllProjects] = useState([]);
   const [showLoginModal, setShowLoginModal] = useState(null); // group obj
@@ -141,12 +202,14 @@ export default function Editor() {
     const aSum = aValues.reduce((a,b) => a + Number(b), 0);
     if (!aValues.some(v => Number(v) < 0)) errs.push('ตัวเลือก A ต้องมีคนเสียผลประโยชน์ (มีค่าติดลบ)');
     if (aSum > maxSum) errs.push(`ผลรวมตัวเลขตัวเลือก A ต้องไม่เกิน +${maxSum} (ปัจจุบัน: ${aSum})`);
+    if (aSum < -maxSum) errs.push(`ผลรวมตัวเลขตัวเลือก A ต้องไม่ต่ำกว่า -${maxSum} (ปัจจุบัน: ${aSum})`);
     if (aValues.some(v => Math.abs(Number(v)) > maxIndividual)) errs.push(`ตัวเลือก A ใส่ค่าเกินกำหนด! (ใส่ได้สูงสุดไม่เกิน +/- ${maxIndividual})`);
 
     const bValues = [formData.choice_b_legislative, formData.choice_b_executive, formData.choice_b_judiciary, formData.choice_b_military];
     const bSum = bValues.reduce((a,b) => a + Number(b), 0);
     if (!bValues.some(v => Number(v) < 0)) errs.push('ตัวเลือก B ต้องมีคนเสียผลประโยชน์ (มีค่าติดลบ)');
     if (bSum > maxSum) errs.push(`ผลรวมตัวเลขตัวเลือก B ต้องไม่เกิน +${maxSum} (ปัจจุบัน: ${bSum})`);
+    if (bSum < -maxSum) errs.push(`ผลรวมตัวเลขตัวเลือก B ต้องไม่ต่ำกว่า -${maxSum} (ปัจจุบัน: ${bSum})`);
     if (bValues.some(v => Math.abs(Number(v)) > maxIndividual)) errs.push(`ตัวเลือก B ใส่ค่าเกินกำหนด! (ใส่ได้สูงสุดไม่เกิน +/- ${maxIndividual})`);
 
     setErrors(errs);
@@ -286,76 +349,54 @@ export default function Editor() {
   };
 
   const handleSettingsImageChange = (e, fieldName) => {
-    const file = e.target.files[0];
+    const file = e.target?.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800;
-        const MAX_HEIGHT = 800;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const base64String = canvas.toDataURL('image/jpeg', 0.7);
-        setSettings(prev => ({ ...prev, [fieldName]: base64String }));
-      };
-      img.src = event.target.result;
+      setCropModal({ isOpen: true, imageSrc: event.target.result, fieldName });
     };
     reader.readAsDataURL(file);
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target?.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        const MAX_HEIGHT = 600;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const base64String = canvas.toDataURL('image/jpeg', 0.6);
-        setPreviewUrl(base64String);
-        setFormData(prev => ({ ...prev, image_url: base64String }));
-      };
-      img.src = event.target.result;
+      setCropModal({ isOpen: true, imageSrc: event.target.result, fieldName: null });
     };
     reader.readAsDataURL(file);
   };
+
+  useEffect(() => {
+    const handlePaste = (e) => {
+      if (!groupData) return;
+      
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            // Check activeTab to know which image state to update
+            if (activeTab === 'cards') {
+              handleImageChange({ target: { files: [file] } });
+              e.preventDefault();
+            } else if (activeTab === 'settings') {
+              // Usually we don't know which settings image field they are targeting,
+              // but we can default to the background image if they paste in settings.
+              // For simplicity, let's just support pasting in the cards tab.
+            }
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [groupData, activeTab]);
 
   const renderBalanceBar = (choice) => {
     const maxAllowed = formData.card_type === 'resolution' ? 20 : 10;
@@ -686,9 +727,9 @@ export default function Editor() {
             ) : (
               <button 
                 onClick={publishGame} 
-                disabled={isPublishing || cardsCount < 30}
+                disabled={isPublishing || cardsCount < 30 || cardsList.filter(c => c.card_type === 'crisis').length < 20 || cardsList.filter(c => c.card_type === 'resolution').length < 10}
                 className="btn-primary" 
-                style={{ background: cardsCount < 30 ? 'var(--secondary)' : '#f59e0b', color: cardsCount < 30 ? '#666' : 'white' }}>
+                style={{ background: (cardsCount < 30 || cardsList.filter(c => c.card_type === 'crisis').length < 20 || cardsList.filter(c => c.card_type === 'resolution').length < 10) ? 'var(--secondary)' : '#f59e0b', color: (cardsCount < 30 || cardsList.filter(c => c.card_type === 'crisis').length < 20 || cardsList.filter(c => c.card_type === 'resolution').length < 10) ? '#666' : 'white' }}>
                 🚀 เผยแพร่ผลงาน ({cardsCount}/30)
               </button>
             )}
@@ -718,24 +759,24 @@ export default function Editor() {
               <hr style={{ border: '1px solid rgba(255,255,255,0.1)', marginBottom: '2rem' }} />
               <div className="grid-2">
                 <div>
-                  <h3 style={{ color: 'var(--legislative-color)' }}>🏛️ นิติบัญญัติ (สภา)</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าสภาเหลือ 0% (สภาล่ม)</label><input type="text" name="end_leg_0" value={settings.end_leg_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าสภาเต็ม 100% (เผด็จการรัฐสภา)</label><input type="text" name="end_leg_100" value={settings.end_leg_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <h3 style={{ color: 'var(--legislative-color)' }}>{settings.pillar_1_icon || '🏛️'} {settings.pillar_1_name || 'นิติบัญญัติ (สภา)'}</h3>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_1_name || 'สภา'} เหลือ 0%</label><input type="text" name="end_leg_0" value={settings.end_leg_0} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_1_name || 'สภา'} เต็ม 100%</label><input type="text" name="end_leg_100" value={settings.end_leg_100} onChange={handleSettingChange} className="input-field" required /></div>
                 </div>
                 <div>
-                  <h3 style={{ color: 'var(--executive-color)' }}>💼 บริหาร (รัฐบาล)</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าบริหารเหลือ 0% (รัฐล้มเหลว)</label><input type="text" name="end_exe_0" value={settings.end_exe_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าบริหารเต็ม 100% (อำนาจนิยมเบ็ดเสร็จ)</label><input type="text" name="end_exe_100" value={settings.end_exe_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <h3 style={{ color: 'var(--executive-color)' }}>{settings.pillar_2_icon || '💼'} {settings.pillar_2_name || 'บริหาร (รัฐบาล)'}</h3>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_2_name || 'บริหาร'} เหลือ 0%</label><input type="text" name="end_exe_0" value={settings.end_exe_0} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_2_name || 'บริหาร'} เต็ม 100%</label><input type="text" name="end_exe_100" value={settings.end_exe_100} onChange={handleSettingChange} className="input-field" required /></div>
                 </div>
                 <div>
-                  <h3 style={{ color: 'var(--judiciary-color)' }}>⚖️ ตุลาการ (ศาล)</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าศาลเหลือ 0% (วิกฤตยุติธรรม)</label><input type="text" name="end_jud_0" value={settings.end_jud_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าศาลเต็ม 100% (ศาลสั่งปลด)</label><input type="text" name="end_jud_100" value={settings.end_jud_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <h3 style={{ color: 'var(--judiciary-color)' }}>{settings.pillar_3_icon || '⚖️'} {settings.pillar_3_name || 'ตุลาการ (ศาล)'}</h3>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_3_name || 'ศาล'} เหลือ 0%</label><input type="text" name="end_jud_0" value={settings.end_jud_0} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_3_name || 'ศาล'} เต็ม 100%</label><input type="text" name="end_jud_100" value={settings.end_jud_100} onChange={handleSettingChange} className="input-field" required /></div>
                 </div>
                 <div>
-                  <h3 style={{ color: 'var(--military-color)' }}>🎖️ ทหาร (กองทัพ)</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าทหารเหลือ 0% (สงครามกลางเมือง)</label><input type="text" name="end_mil_0" value={settings.end_mil_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่าทหารเต็ม 100% (รัฐประหาร)</label><input type="text" name="end_mil_100" value={settings.end_mil_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <h3 style={{ color: 'var(--military-color)' }}>{settings.pillar_4_icon || '🎖️'} {settings.pillar_4_name || 'ทหาร (กองทัพ)'}</h3>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_4_name || 'ทหาร'} เหลือ 0%</label><input type="text" name="end_mil_0" value={settings.end_mil_0} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_4_name || 'ทหาร'} เต็ม 100%</label><input type="text" name="end_mil_100" value={settings.end_mil_100} onChange={handleSettingChange} className="input-field" required /></div>
                 </div>
               </div>
 
@@ -855,7 +896,7 @@ export default function Editor() {
           ) : (
             <>
               <h3 style={{ color: '#ef4444', marginBottom: '1rem', borderBottom: '1px solid rgba(239, 68, 68, 0.3)', paddingBottom: '0.5rem' }}>
-                🔴 การ์ดวิกฤต (Crisis) - {cardsList.filter(c => c.card_type === 'crisis').length} ใบ
+                🔴 การ์ดวิกฤต (Crisis) - {cardsList.filter(c => c.card_type === 'crisis').length}/20 ใบ (ขั้นต่ำ)
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 {cardsList.filter(c => c.card_type === 'crisis').map(card => (
@@ -881,7 +922,7 @@ export default function Editor() {
               </div>
 
               <h3 style={{ color: '#eab308', marginBottom: '1rem', borderBottom: '1px solid rgba(234, 179, 8, 0.3)', paddingBottom: '0.5rem' }}>
-                🟡 การ์ดโอกาส/ทางออก (Resolution) - {cardsList.filter(c => c.card_type === 'resolution').length} ใบ
+                🟡 การ์ดโอกาส/ทางออก (Resolution) - {cardsList.filter(c => c.card_type === 'resolution').length}/10 ใบ (ขั้นต่ำ)
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
                 {cardsList.filter(c => c.card_type === 'resolution').map(card => (
@@ -907,6 +948,34 @@ export default function Editor() {
               </div>
             </>
           )}
+        </div>
+      )}
+      {cropModal.isOpen && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal" style={{ width: '90%', maxWidth: '600px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--primary)' }}>ครอบตัดรูปภาพ</h2>
+              <button onClick={() => setCropModal({ isOpen: false, imageSrc: null, fieldName: null })} className="icon-btn" style={{ fontSize: '1.5rem' }}>✕</button>
+            </div>
+            
+            <div style={{ position: 'relative', flex: 1, backgroundColor: '#333', borderRadius: '8px', overflow: 'hidden' }}>
+              <Cropper
+                image={cropModal.imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={cropModal.fieldName === 'bg_image_url' ? 16/9 : 1}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>ซูม:</span>
+              <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} style={{ flex: 1 }} />
+              <button onClick={handleCropSave} className="btn-primary" style={{ padding: '0.5rem 1.5rem' }}>ยืนยัน</button>
+            </div>
+          </div>
         </div>
       )}
 
