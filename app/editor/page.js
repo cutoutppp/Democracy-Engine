@@ -241,9 +241,11 @@ export default function Editor() {
 
       if (res.ok) {
         setSuccessMsg(editingCardId ? 'อัปเดตการ์ดสำเร็จ!' : 'บันทึกการ์ดใหม่สำเร็จ!');
-        resetCardForm();
+        if (!editingCardId) {
+          resetCardForm();
+          window.scrollTo(0,0);
+        }
         fetchCards(groupData.id);
-        window.scrollTo(0,0);
       }
     } catch (err) {
       console.error(err);
@@ -904,7 +906,7 @@ export default function Editor() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 {cardsList.filter(c => c.card_type === 'crisis').map(card => (
                   <div key={card.id} className="glass-panel" style={{ padding: '1rem', cursor: 'pointer', border: '1px solid #ef4444' }} onClick={() => editCard(card)}>
-                    <div style={{ height: '120px', background: 'rgba(0,0,0,0.5)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ aspectRatio: '3/2', width: '100%', background: 'rgba(0,0,0,0.5)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
                       {card.image_url ? <img src={card.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>[No Image]</div>}
                     </div>
                     <h4 style={{ margin: 0 }}>{card.title}</h4>
@@ -930,7 +932,7 @@ export default function Editor() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
                 {cardsList.filter(c => c.card_type === 'resolution').map(card => (
                   <div key={card.id} className="glass-panel" style={{ padding: '1rem', cursor: 'pointer', border: '1px solid #eab308' }} onClick={() => editCard(card)}>
-                    <div style={{ height: '120px', background: 'rgba(0,0,0,0.5)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ aspectRatio: '3/2', width: '100%', background: 'rgba(0,0,0,0.5)', marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden' }}>
                       {card.image_url ? <img src={card.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>[No Image]</div>}
                     </div>
                     <h4 style={{ margin: 0 }}>{card.title}</h4>
