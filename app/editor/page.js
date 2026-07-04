@@ -314,7 +314,7 @@ export default function Editor() {
       return;
     }
     if (resolutionCount < 10) {
-      alert(`ต้องมี 🟡 การ์ดโอกาส/ทางออก (Resolution) อย่างน้อย 10 ใบ (ตอนนี้มี ${resolutionCount} ใบ)`);
+      alert(`ต้องมี 🟡 การ์ดเหตุการณ์พลิกผัน (Game Changer) อย่างน้อย 10 ใบ (ตอนนี้มี ${resolutionCount} ใบ)`);
       return;
     }
     if (!confirm('คุณแน่ใจหรือไม่ว่าจะเผยแพร่เกมนี้? (เผยแพร่แล้วเพื่อนกลุ่มอื่นจะเห็นเกมของคุณ)')) return;
@@ -599,7 +599,7 @@ export default function Editor() {
               <h3 style={{ marginBottom: '0.5rem', color: '#60a5fa' }}>💡 กฎการดึงหลอดสมดุล (Game Balance)</h3>
               <ul style={{ paddingLeft: '1.5rem', color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.5' }}>
                 <li>ต้องมีลบเสมอ: ทุกตัวเลือกห้ามแจกแต้มฟรี ต้องมีหลอดที่ถูกดึงไปทางซ้าย (ค่าติดลบ) อย่างน้อย 1 อัน</li>
-                <li>หลอดผลรวมต้องไม่แดง: ผลรวมสุทธิ (Net Impact) ของ 🔴 การ์ดวิกฤต ต้องไม่เกิน <strong>+10</strong> ส่วน 🟡 การ์ดทางออก จะให้สิทธิพิเศษถึง <strong>+20</strong> ถ้าเกินเพดาน คุณต้องดึงหลอดอื่นให้ติดลบเพื่อชดเชย</li>
+                <li>หลอดผลรวมต้องไม่แดง: ผลรวมสุทธิ (Net Impact) ของ 🔴 การ์ดวิกฤต ต้องไม่เกิน <strong>+10</strong> ส่วน 🟡 การ์ดเหตุการณ์พลิกผัน จะให้สิทธิพิเศษถึง <strong>+20</strong> ถ้าเกินเพดาน คุณต้องดึงหลอดอื่นให้ติดลบเพื่อชดเชย</li>
               </ul>
             </div>
 
@@ -608,7 +608,7 @@ export default function Editor() {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>ประเภทการ์ด</label>
                 <select name="card_type" value={formData.card_type} onChange={handleInputChange} className="input-field" style={{ background: 'rgba(0,0,0,0.4)' }}>
                   <option value="crisis">🔴 การ์ดวิกฤต (Crisis)</option>
-                  <option value="resolution">🟡 การ์ดโอกาส/ทางออก (Resolution)</option>
+                  <option value="resolution">🟡 การ์ดเหตุการณ์พลิกผัน (Game Changer)</option>
                 </select>
               </div>
 
@@ -832,7 +832,7 @@ export default function Editor() {
                 <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <input type="color" name="resolution_color" value={settings.resolution_color || '#eab308'} onChange={handleSettingChange} style={{ width: '40px', height: '40px', cursor: 'pointer', background: 'none', border: 'none' }} />
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1rem' }}>สีการ์ดโอกาส (Resolution)</h3>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>สีการ์ดพลิกผัน (Game Changer)</h3>
                   </div>
                 </div>
               </div>
@@ -927,7 +927,7 @@ export default function Editor() {
               </div>
 
               <h3 style={{ color: '#eab308', marginBottom: '1rem', borderBottom: '1px solid rgba(234, 179, 8, 0.3)', paddingBottom: '0.5rem' }}>
-                🟡 การ์ดโอกาส/ทางออก (Resolution) - {cardsList.filter(c => c.card_type === 'resolution').length}/10 ใบ (ขั้นต่ำ)
+                🟡 การ์ดเหตุการณ์พลิกผัน (Game Changer) - {cardsList.filter(c => c.card_type === 'resolution').length}/10 ใบ (ขั้นต่ำ)
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
                 {cardsList.filter(c => c.card_type === 'resolution').map(card => (
@@ -949,7 +949,7 @@ export default function Editor() {
                     <button className="btn-primary" style={{ width: '100%', padding: '0.5rem', fontSize: '0.9rem', marginTop: '1rem' }}>แก้ไขการ์ดนี้</button>
                   </div>
                 ))}
-                {cardsList.filter(c => c.card_type === 'resolution').length === 0 && <p style={{ color: 'var(--text-muted)' }}>ยังไม่มีการ์ดทางออก</p>}
+                {cardsList.filter(c => c.card_type === 'resolution').length === 0 && <p style={{ color: 'var(--text-muted)' }}>ยังไม่มีการ์ดเหตุการณ์พลิกผัน</p>}
               </div>
             </>
           )}
