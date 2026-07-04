@@ -44,6 +44,23 @@ export async function POST(request) {
       return NextResponse.json({ success: true });
     }
 
+    if (action === 'update_all_limits') {
+      if (max_crisis_val === undefined || max_resolution_val === undefined) {
+        return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+      }
+      await db.run('UPDATE groups SET max_crisis_val = ?, max_resolution_val = ?', [max_crisis_val, max_resolution_val]);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'get_stats') {
+      if (!target_id) return NextResponse.json({ error: 'Missing target_id' }, { status: 400 });
+      const cards = await db.all(
+        'SELECT id, title, card_type, stats_a, stats_b FROM cards WHERE group_id = ? ORDER BY (stats_a + stats_b) DESC',
+        [target_id]
+      );
+      return NextResponse.json({ cards });
+    }
+
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

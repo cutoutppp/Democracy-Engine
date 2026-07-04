@@ -11,6 +11,28 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingLimitsFor, setEditingLimitsFor] = useState(null);
   const [limitForm, setLimitForm] = useState({ max_crisis_val: 20, max_resolution_val: 30 });
+  const [statsFor, setStatsFor] = useState(null);
+  const [statsData, setStatsData] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(false);
+  
+  const [isGlobalLimitsModalOpen, setIsGlobalLimitsModalOpen] = useState(false);
+  const [globalLimitsForm, setGlobalLimitsForm] = useState({ max_crisis_val: 20, max_resolution_val: 30 });
+
+  const fetchStats = async (g) => {
+    setStatsFor(g);
+    setLoadingStats(true);
+    setStatsData([]);
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get_stats', password, target_id: g.id })
+      });
+      const data = await res.json();
+      if (res.ok) setStatsData(data.cards || []);
+    } catch(e) { console.error(e); }
+    finally { setLoadingStats(false); }
+  };
 
   const updateLimits = async (e) => {
     e.preventDefault();
@@ -31,6 +53,34 @@ export default function AdminDashboard() {
         setGroups(groups.map(g => g.id === editingLimitsFor.id ? { ...g, max_crisis_val: limitForm.max_crisis_val, max_resolution_val: limitForm.max_resolution_val } : g));
         setEditingLimitsFor(null);
         alert('อัปเดตลิมิตคะแนนสำเร็จ!');
+      } else {
+        alert('เกิดข้อผิดพลาดในการอัปเดต');
+      }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    }
+  };
+
+  const updateGlobalLimits = async (e) => {
+    e.preventDefault();
+    const conf = window.confirm('คุณแน่ใจหรือไม่ว่าจะเปลี่ยนเพดานคะแนนสำหรับ "ทุกโปรเจกต์" พร้อมกันทั้งหมด?');
+    if (!conf) return;
+    
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'update_all_limits', 
+          password, 
+          max_crisis_val: globalLimitsForm.max_crisis_val,
+          max_resolution_val: globalLimitsForm.max_resolution_val
+        })
+      });
+      if (res.ok) {
+        setGroups(groups.map(g => ({ ...g, max_crisis_val: globalLimitsForm.max_crisis_val, max_resolution_val: globalLimitsForm.max_resolution_val })));
+        setIsGlobalLimitsModalOpen(false);
+        alert('อัปเดตลิมิตคะแนนทุกโปรเจกต์สำเร็จ!');
       } else {
         alert('เกิดข้อผิดพลาดในการอัปเดต');
       }
@@ -133,10 +183,13 @@ export default function AdminDashboard() {
           <h2><span className="text-gradient">Teacher Dashboard</span></h2>
           <p style={{ color: 'var(--text-muted)' }}>จำนวนกลุ่มทั้งหมด: {groups.length} โปรเจกต์</p>
         </div>
-        <button onClick={() => window.location.reload()} className="btn-primary" style={{ background: 'var(--danger)' }}>ออกจากระบบ</button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => setIsGlobalLimitsModalOpen(true)} className="btn-primary" style={{ background: 'var(--primary)' }}>⚙️ ตั้งค่าเพดานทุกกลุ่ม</button>
+          <button onClick={() => window.location.reload()} className="btn-primary" style={{ background: 'var(--danger)' }}>ออกจากระบบ</button>
+        </div>
       </div>
 
-      <div className="glass-panel" style={{ overflowX: 'auto' }}>
+      <div className="glass-panel" style={{ overflowX: 'auto', minHeight: '60vh' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
@@ -169,6 +222,7 @@ export default function AdminDashboard() {
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                   <a href={`/play?group=${encodeURIComponent(g.name)}`} target="_blank" className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#3b82f6', textDecoration: 'none' }}>เล่นเกม</a>
+                  <button onClick={() => fetchStats(g)} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#8b5cf6' }}>สถิติ</button>
                   <button onClick={() => {
                     setEditingLimitsFor(g);
                     setLimitForm({ max_crisis_val: g.max_crisis_val || 20, max_resolution_val: g.max_resolution_val || 30 });
@@ -213,6 +267,112 @@ export default function AdminDashboard() {
                 <button type="submit" className="btn-primary" style={{ flex: 1, background: '#10b981' }}>บันทึกค่า</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Global Limits Modal */}
+      {isGlobalLimitsModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', zIndex: 1000,
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+          padding: '2rem', overflowY: 'auto'
+        }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', margin: '0 auto', background: '#1e293b' }}>
+            <h3 style={{ marginBottom: '1rem', color: '#f87171' }}>⚠️ ตั้งค่าเพดานคะแนนสำหรับทุกกลุ่ม</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              การตั้งค่านี้จะเขียนทับค่าเพดานคะแนนของการ์ดวิกฤตและการ์ดทางออก ของ <strong>"ทุกโปรเจกต์ที่มีอยู่ในระบบ"</strong> พร้อมกัน!
+            </p>
+            <form onSubmit={updateGlobalLimits}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#fca5a5' }}>เพดานคะแนน การ์ดวิกฤต (Crisis)</label>
+                <input 
+                  type="number" className="input-field"
+                  value={globalLimitsForm.max_crisis_val}
+                  onChange={e => setGlobalLimitsForm({...globalLimitsForm, max_crisis_val: parseInt(e.target.value) || 0})}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#86efac' }}>เพดานคะแนน การ์ดทางออก (Resolution)</label>
+                <input 
+                  type="number" className="input-field"
+                  value={globalLimitsForm.max_resolution_val}
+                  onChange={e => setGlobalLimitsForm({...globalLimitsForm, max_resolution_val: parseInt(e.target.value) || 0})}
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-secondary" onClick={() => setIsGlobalLimitsModalOpen(false)}>ยกเลิก</button>
+                <button type="submit" className="btn-primary" style={{ background: '#ef4444' }}>บันทึกทุกโปรเจกต์</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Stats Modal */}
+      {statsFor && (
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, padding: '2rem 1rem', overflowY: 'auto' }}
+          onClick={() => setStatsFor(null)}
+        >
+          <div 
+            className="glass-panel animate-fade-in" 
+            style={{ width: '100%', maxWidth: '800px', minHeight: '60vh', padding: '2.5rem', display: 'flex', flexDirection: 'column', margin: '0 auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <h2 style={{ color: '#8b5cf6', margin: 0 }}>📊 สถิติการเลือก</h2>
+              <button onClick={() => setStatsFor(null)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer', padding: '0.5rem' }}>✕</button>
+            </div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>กลุ่ม: {statsFor.game_title || statsFor.name}</p>
+            <div style={{ paddingRight: '0.5rem', marginBottom: '1.5rem' }}>
+              {loadingStats ? (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>กำลังโหลด...</p>
+              ) : statsData.length === 0 ? (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>ยังไม่มีสถิติการเล่น (ต้องมีคนเล่นเกมก่อน)</p>
+              ) : (
+                <div>
+                  {statsData.map((card, index) => {
+                    const total = (card.stats_a || 0) + (card.stats_b || 0);
+                    const pctA = total > 0 ? Math.round((card.stats_a / total) * 100) : 0;
+                    const pctB = total > 0 ? Math.round((card.stats_b / total) * 100) : 0;
+                    return (
+                      <div key={card.id || `card-${index}`} style={{ marginBottom: '1.2rem', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: `3px solid ${card.card_type === 'crisis' ? '#ef4444' : '#eab308'}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{card.title}</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{total} ครั้ง</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '3px' }}>
+                              <span style={{ color: '#60a5fa' }}>ซ้าย (A)</span>
+                              <span>{pctA}% ({card.stats_a || 0})</span>
+                            </div>
+                            <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px' }}>
+                              <div style={{ width: `${pctA}%`, height: '100%', background: '#60a5fa', borderRadius: '3px', transition: 'width 0.5s' }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '3px' }}>
+                              <span style={{ color: '#a78bfa' }}>ขวา (B)</span>
+                              <span>{pctB}% ({card.stats_b || 0})</span>
+                            </div>
+                            <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px' }}>
+                              <div style={{ width: `${pctB}%`, height: '100%', background: '#a78bfa', borderRadius: '3px', transition: 'width 0.5s' }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            
+            <button onClick={() => setStatsFor(null)} className="btn-primary" style={{ width: '100%', background: 'var(--secondary)' }}>ปิดหน้าต่าง</button>
           </div>
         </div>
       )}

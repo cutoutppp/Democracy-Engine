@@ -21,8 +21,9 @@ export default function Play() {
     judiciary: 50,
     military: 50
   });
+  const [isClient, setIsClient] = useState(false);
+  const [audioContext, setAudioContext] = useState(null);
   const [isHardMode, setIsHardMode] = useState(false);
-
   const [dragStartX, setDragStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -80,16 +81,16 @@ export default function Play() {
 
       const shuffled = [...cardsData].sort(() => 0.5 - Math.random());
       
-      // Universal Mode Selection Card
+      // Universal Mode Selection Card (Challenge)
       const modeSelectCard = {
         id: 'mode_select',
-        title: 'เลือกระดับความยาก',
-        description: 'ก่อนเริ่มการบริหารประเทศ กรุณาเลือกระดับความท้าทาย: โหมดปกติ หรือ โหมดยาก (เสาจะลดฮวบถ้าลบ)',
+        title: 'เลือกระดับความท้าทาย',
+        description: 'ก่อนเริ่มการบริหารประเทศ กรุณาเลือกระดับความท้าทาย (จะมีผลต่อตัวช่วยในเกม):',
         card_type: 'resolution',
         image_url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231e3a8a"/><stop offset="100%" stop-color="%233b82f6"/></linearGradient></defs><rect width="600" height="600" fill="url(%23g)"/><text x="300" y="300" font-family="sans-serif" font-size="120" text-anchor="middle" dominant-baseline="middle">🎮</text></svg>',
-        choice_a_text: '🟢 โหมดปกติ (Normal)',
+        choice_a_text: '🟢 ความท้าทายปกติ (Normal)',
         choice_a_legislative: 0, choice_a_executive: 0, choice_a_judiciary: 0, choice_a_military: 0,
-        choice_b_text: '🔥 โหมดยาก (Hard Mode)',
+        choice_b_text: '🔥 ความท้าทายระดับสูง (Hard Mode)',
         choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0
       };
 
@@ -125,8 +126,11 @@ export default function Play() {
 
   const handleChoice = (choice) => {
     if (gameState !== 'playing') return;
+    if (animateDir !== '') return; // Prevent double-clicks during animation
     
     const card = cards[currentCardIndex];
+    if (!card) return; // Safety check
+    
     let p = { ...pillars };
 
     // Set difficulty on mode select card
@@ -203,20 +207,25 @@ export default function Play() {
   };
 
   const checkGameOver = (p) => {
-    if (p.legislative <= 0) { setEndReason(groupData.end_leg_0); setGameState('gameover'); playGameOver(); return; }
-    if (p.legislative >= 100) { setEndReason(groupData.end_leg_100); setGameState('gameover'); playGameOver(); return; }
+    const pillar1 = groupData?.pillar_1_name || 'สภา';
+    const pillar2 = groupData?.pillar_2_name || 'บริหาร';
+    const pillar3 = groupData?.pillar_3_name || 'ศาล';
+    const pillar4 = groupData?.pillar_4_name || 'ทหาร';
+
+    if (p.legislative <= 0) { setEndReason(groupData.end_leg_0 || `${pillar1}ล่มสลาย อำนาจนิติบัญญัติหมดสิ้น`); setGameState('gameover'); playGameOver(); return; }
+    if (p.legislative >= 100) { setEndReason(groupData.end_leg_100 || `${pillar1}ครองอำนาจเบ็ดเสร็จ ประชาธิปไตยสิ้นสุด`); setGameState('gameover'); playGameOver(); return; }
     
-    if (p.executive <= 0) { setEndReason(groupData.end_exe_0); setGameState('gameover'); playGameOver(); return; }
-    if (p.executive >= 100) { setEndReason(groupData.end_exe_100); setGameState('gameover'); playGameOver(); return; }
+    if (p.executive <= 0) { setEndReason(groupData.end_exe_0 || `${pillar2}ล้มเหลว รัฐบาลไม่อาจดำเนินการได้`); setGameState('gameover'); playGameOver(); return; }
+    if (p.executive >= 100) { setEndReason(groupData.end_exe_100 || `${pillar2}เผด็จการ รัฐบาลกุมอำนาจทั้งหมด`); setGameState('gameover'); playGameOver(); return; }
 
-    if (p.judiciary <= 0) { setEndReason(groupData.end_jud_0); setGameState('gameover'); playGameOver(); return; }
-    if (p.judiciary >= 100) { setEndReason(groupData.end_jud_100); setGameState('gameover'); playGameOver(); return; }
+    if (p.judiciary <= 0) { setEndReason(groupData.end_jud_0 || `${pillar3}ล่มสลาย กฎหมายไร้ความหมาย`); setGameState('gameover'); playGameOver(); return; }
+    if (p.judiciary >= 100) { setEndReason(groupData.end_jud_100 || `${pillar3}ครองอำนาจ ตุลาการภิวัฒน์สุดขีด`); setGameState('gameover'); playGameOver(); return; }
 
-    if (p.military <= 0) { setEndReason(groupData.end_mil_0); setGameState('gameover'); playGameOver(); return; }
-    if (p.military >= 100) { setEndReason(groupData.end_mil_100); setGameState('gameover'); playGameOver(); return; }
+    if (p.military <= 0) { setEndReason(groupData.end_mil_0 || `${pillar4}แตกกำลังใจ ประเทศไร้การป้องกัน`); setGameState('gameover'); playGameOver(); return; }
+    if (p.military >= 100) { setEndReason(groupData.end_mil_100 || `${pillar4}ยึดอำนาจ รัฐประหารเกิดขึ้น`); setGameState('gameover'); playGameOver(); return; }
 
     if (currentCardIndex + 1 >= cards.length) {
-      setEndReason(groupData.end_victory);
+      setEndReason(groupData.end_victory || 'คุณผ่านพ้นทุกวิกฤตได้อย่างยอดเยี่ยม! ประเทศยังคงดำรงอยู่ด้วยความสมดุล');
       setGameState('victory');
       playVictory();
     } else {
@@ -301,46 +310,61 @@ export default function Play() {
         <div className="glass-panel" style={{ padding: '3rem', width: '100%', maxWidth: '600px', textAlign: 'center' }}>
           {gameState === 'victory' ? (
             <>
-              <h1 style={{ color: 'var(--success)', fontSize: '3.5rem', marginBottom: '0.5rem' }}>VICTORY</h1>
-              <p style={{ fontSize: '1.2rem', marginBottom: '2rem', color: 'white' }}>คุณสามารถประคองประเทศรอดพ้นได้ครบเทิร์น!</p>
+              <div style={{ fontSize: '4rem', marginBottom: '0.5rem' }}>🏆</div>
+              <h1 style={{ color: 'var(--success)', fontSize: '3rem', marginBottom: '0.5rem' }}>VICTORY!</h1>
+              <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', color: '#86efac', lineHeight: 1.6 }}>{endReason}</p>
             </>
           ) : (
             <>
-              <h1 style={{ color: 'var(--danger)', fontSize: '3.5rem', marginBottom: '0.5rem' }}>GAME OVER</h1>
-              <p style={{ fontSize: '1.5rem', marginBottom: '2rem', color: 'white' }}>{endReason}</p>
+              <div style={{ fontSize: '4rem', marginBottom: '0.5rem' }}>💀</div>
+              <h1 style={{ color: 'var(--danger)', fontSize: '3rem', marginBottom: '0.5rem' }}>GAME OVER</h1>
+              <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', color: '#fca5a5', lineHeight: 1.6 }}>{endReason}</p>
             </>
           )}
-          
-          <div style={{ margin: '2rem 0', display: 'flex', justifyContent: 'space-around', background: 'rgba(0,0,0,0.4)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div>
-              <div style={{ color: 'var(--legislative-color)', marginBottom: '0.5rem' }}>{groupData?.pillar_1_name || 'สภา'}</div>
-              <h2 style={{ margin: 0 }}>{pillars.legislative}%</h2>
-            </div>
-            <div>
-              <div style={{ color: 'var(--executive-color)', marginBottom: '0.5rem' }}>{groupData?.pillar_2_name || 'บริหาร'}</div>
-              <h2 style={{ margin: 0 }}>{pillars.executive}%</h2>
-            </div>
-            <div>
-              <div style={{ color: 'var(--judiciary-color)', marginBottom: '0.5rem' }}>{groupData?.pillar_3_name || 'ศาล'}</div>
-              <h2 style={{ margin: 0 }}>{pillars.judiciary}%</h2>
-            </div>
-            <div>
-              <div style={{ color: 'var(--military-color)', marginBottom: '0.5rem' }}>{groupData?.pillar_4_name || 'ทหาร'}</div>
-              <h2 style={{ margin: 0 }}>{pillars.military}%</h2>
-            </div>
-          </div>
+
+          {/* Final Pillar Scores */}
+          {(() => {
+            const pillarData = [
+              { name: groupData?.pillar_1_name || 'สภา', val: pillars.legislative, color: 'var(--legislative-color)', icon: groupData?.pillar_1_icon || '🏛️' },
+              { name: groupData?.pillar_2_name || 'บริหาร', val: pillars.executive, color: 'var(--executive-color)', icon: groupData?.pillar_2_icon || '💼' },
+              { name: groupData?.pillar_3_name || 'ศาล', val: pillars.judiciary, color: 'var(--judiciary-color)', icon: groupData?.pillar_3_icon || '⚖️' },
+              { name: groupData?.pillar_4_name || 'ทหาร', val: pillars.military, color: 'var(--military-color)', icon: groupData?.pillar_4_icon || '🎖️' },
+            ];
+            const best = [...pillarData].sort((a,b) => b.val - a.val)[0];
+            const worst = [...pillarData].sort((a,b) => a.val - b.val)[0];
+            return (
+              <div style={{ margin: '1.5rem 0', background: 'rgba(0,0,0,0.4)', padding: '1.5rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1rem' }}>
+                  {pillarData.map(p => (
+                    <div key={p.name} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>{p.icon}</div>
+                      <div style={{ color: p.color, fontSize: '0.8rem', marginBottom: '0.3rem' }}>{p.name}</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '1.3rem', color: p.val <= 15 ? '#ef4444' : p.val >= 85 ? '#f59e0b' : 'white' }}>{p.val}%</div>
+                      <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', margin: '0.3rem auto 0' }}>
+                        <div style={{ width: `${p.val}%`, height: '100%', background: p.color, borderRadius: '2px' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', fontSize: '0.8rem' }}>
+                  <span style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', padding: '2px 10px', borderRadius: '12px' }}>🌟 ดีที่สุด: {best.icon} {best.name}</span>
+                  <span style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', padding: '2px 10px', borderRadius: '12px' }}>⚠️ อ่อนแอสุด: {worst.icon} {worst.name}</span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Credits Section */}
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem' }}>
-            <h3 style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '0.5rem' }}>Credits / ผู้สร้างสรรค์ผลงาน</h3>
-            <p style={{ color: 'white', whiteSpace: 'pre-line', margin: 0, fontSize: '1.1rem' }}>
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem 1.5rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>ผู้สร้างสรรค์ผลงาน</p>
+            <p style={{ color: 'white', whiteSpace: 'pre-line', margin: 0 }}>
               {groupData?.credits || groupData?.name}
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', width: '100%' }}>
-            <button onClick={() => startGame()} className="btn-primary" style={{ flex: 1, fontSize: '1.1rem', background: '#3b82f6', padding: '10px' }}>🔄 เล่นอีกครั้ง</button>
-            <button onClick={() => setGameState('menu')} className="btn-primary" style={{ flex: 1, fontSize: '1.1rem', background: 'var(--secondary)', padding: '10px' }}>🏠 เล่นเกมอื่น</button>
+            <button onClick={() => startGame()} className="btn-primary" style={{ flex: 1, background: '#3b82f6', padding: '10px' }}>🔄 เล่นอีกครั้ง</button>
+            <button onClick={() => setGameState('menu')} className="btn-primary" style={{ flex: 1, background: 'var(--secondary)', padding: '10px' }}>🏠 เล่นเกมอื่น</button>
           </div>
           <a href="/" style={{ display: 'block', color: 'var(--text-muted)', textDecoration: 'none' }}>
             &larr; กลับหน้าหลัก
@@ -357,8 +381,10 @@ export default function Play() {
       display: 'flex', 
       flexDirection: 'column', 
       alignItems: 'center', 
-      paddingTop: '2rem',
-      minHeight: '100vh',
+      justifyContent: 'center',
+      padding: '1rem',
+      height: '100vh',
+      overflow: 'hidden',
       background: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url(${groupData.bg_image_url}) no-repeat center center fixed` : undefined,
       backgroundSize: 'cover'
     }}>
@@ -389,14 +415,14 @@ export default function Play() {
       `}} />
 
       {/* 4 Pillars Header */}
-      <div className="glass-panel pillars-container" style={{ width: '100%', maxWidth: '600px', padding: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '2rem' }}>
+      <div className="glass-panel pillars-container" style={{ width: '100%', maxWidth: '600px', padding: '1rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '1rem', flexShrink: 0 }}>
         <PillarBar name={groupData?.pillar_1_name || 'สภา'} value={pillars.legislative} color="var(--legislative-color)" icon={groupData?.pillar_1_icon || '🏛️'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_legislative : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_legislative : 0} />
         <PillarBar name={groupData?.pillar_2_name || 'บริหาร'} value={pillars.executive} color="var(--executive-color)" icon={groupData?.pillar_2_icon || '💼'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_executive : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_executive : 0} />
         <PillarBar name={groupData?.pillar_3_name || 'ศาล'} value={pillars.judiciary} color="var(--judiciary-color)" icon={groupData?.pillar_3_icon || '⚖️'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_judiciary : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_judiciary : 0} />
         <PillarBar name={groupData?.pillar_4_name || 'ทหาร'} value={pillars.military} color="var(--military-color)" icon={groupData?.pillar_4_icon || '🎖️'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_military : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_military : 0} />
       </div>
 
-      <div style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>เทิร์นที่ {currentCardIndex + 1} / {cards.length}</div>
+      <div style={{ marginBottom: '0.5rem', color: 'var(--text-muted)', flexShrink: 0 }}>เทิร์นที่ {currentCardIndex + 1} / {cards.length}</div>
 
       {/* The Card */}
       <div 
@@ -411,9 +437,9 @@ export default function Play() {
         style={{ 
           width: '100%', 
           maxWidth: '400px', 
-          height: 'calc(100vh - 280px)',
-          minHeight: '300px',
-          maxHeight: '500px',
+          flex: 1,
+          minHeight: 0,
+          maxHeight: '55vh',
           position: 'relative',
           overflowY: 'auto',
           display: 'flex',
@@ -432,7 +458,7 @@ export default function Play() {
       >
         <div style={{ flex: 1, minHeight: '150px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           {currentCard?.image_url ? (
-            <img src={currentCard.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={currentCard?.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <span style={{ color: 'var(--secondary)', fontSize: '4rem' }}>❓</span>
           )}
@@ -445,7 +471,7 @@ export default function Play() {
       </div>
 
       {/* Choices Buttons (Simulating Swipe) */}
-      <div className="play-choices-container" style={{ display: 'flex', gap: '1rem', marginTop: '2rem', width: '100%', maxWidth: '600px' }}>
+      <div className="play-choices-container" style={{ display: 'flex', gap: '1rem', marginTop: '1rem', width: '100%', maxWidth: '600px', flexShrink: 0 }}>
         <button 
           onClick={() => handleChoice('A')}
           onMouseEnter={() => setHoverChoice('A')}

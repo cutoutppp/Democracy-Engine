@@ -38,6 +38,8 @@ export async function PUT(request) {
 
     if (!id) return NextResponse.json({ error: 'Group ID is required' }, { status: 400 });
 
+    // NOTE: max_crisis_val and max_resolution_val are intentionally NOT updated here.
+    // They are managed exclusively by the Admin Dashboard to prevent students from overriding teacher settings.
     await db.run(`
       UPDATE groups SET
         end_leg_0 = ?, end_leg_100 = ?,
@@ -52,14 +54,14 @@ export async function PUT(request) {
         pillar_1_color = ?, pillar_2_color = ?, pillar_3_color = ?, pillar_4_color = ?
       WHERE id = ?
     `, [
-      end_leg_0, end_leg_100,
-      end_exe_0, end_exe_100,
-      end_jud_0, end_jud_100,
-      end_mil_0, end_mil_100,
-      end_victory, credits || '', is_published ? 1 : 0, game_title || '',
-      pillar_1_name, pillar_1_icon, pillar_2_name, pillar_2_icon,
-      pillar_3_name, pillar_3_icon, pillar_4_name, pillar_4_icon,
-      intro_title, intro_desc, intro_choice_a, intro_choice_b, intro_image_url,
+      end_leg_0 || '', end_leg_100 || '',
+      end_exe_0 || '', end_exe_100 || '',
+      end_jud_0 || '', end_jud_100 || '',
+      end_mil_0 || '', end_mil_100 || '',
+      end_victory || '', credits || '', is_published ? 1 : 0, game_title || '',
+      pillar_1_name || 'สภา', pillar_1_icon || '🏛️', pillar_2_name || 'บริหาร', pillar_2_icon || '💼',
+      pillar_3_name || 'ศาล', pillar_3_icon || '⚖️', pillar_4_name || 'ทหาร', pillar_4_icon || '🎖️',
+      intro_title || '', intro_desc || '', intro_choice_a || '', intro_choice_b || '', intro_image_url || '',
       bg_image_url || '', crisis_color || '#ef4444', resolution_color || '#eab308',
       pillar_1_color || '#60a5fa', pillar_2_color || '#a78bfa', pillar_3_color || '#fbbf24', pillar_4_color || '#34d399',
       id
