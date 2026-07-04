@@ -1,240 +1,100 @@
-:root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary: #475569;
-  --bg-dark: #0f172a;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  
-  --legislative-color: #f59e0b; /* Orange for Parliament */
-  --executive-color: #3b82f6; /* Blue for Government */
-  --judiciary-color: #8b5cf6; /* Purple for Court */
-  --military-color: #10b981; /* Green for Military */
+import { NextResponse } from 'next/server';
+import db from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 
-  --danger: #ef4444;
-  --success: #10b981;
-}
+export async function POST(request) {
+  try {
+    const data = await request.json();
+    const { name, password, game_title } = data;
+    if (!name || !password) return NextResponse.json({ error: 'Name and password are required' }, { status: 400 });
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: 'Inter', 'Sarabun', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
-/* Glassmorphism utilities */
-.glass {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.glass-panel {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--secondary);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-/* Base UI Elements */
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), #3b82f6);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-}
-
-.btn-primary:disabled {
-  background: var(--secondary);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.input-field {
-  width: 100%;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: white;
-  font-family: inherit;
-  transition: all 0.3s ease;
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-/* Layout Utilities */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-}
-
-@media (max-width: 768px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
+    const existing = await db.get('SELECT * FROM groups WHERE name = ?', [name]);
+    if (existing) {
+      if (existing.password !== password) {
+        return NextResponse.json({ error: 'รหัสผ่านไม่ถูกต้องสำหรับกลุ่มนี้' }, { status: 401 });
+      }
+      return NextResponse.json(existing);
+    }
+    
+    const id = Date.now().toString(); // Basic unique ID since uuid is removed from my snippet
+    await db.run('INSERT INTO groups (id, name, password, game_title) VALUES (?, ?, ?, ?)', [id, name, password, game_title || name]);
+    const newGroup = await db.get('SELECT * FROM groups WHERE id = ?', [id]);
+    
+    return NextResponse.json(newGroup);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  .container { padding: 1rem; }
-  .pillars-container { padding: 0.5rem !important; margin-bottom: 1rem !important; }
-  .pillar-bar { width: 48% !important; padding: 0.4rem 0.5rem !important; margin-bottom: 0.5rem !important; border-radius: 8px !important; }
-  .pillar-icon { font-size: 1.2rem !important; margin-right: 0.4rem !important; }
-  .pillar-name, .pillar-value { font-size: 0.75rem !important; }
-  
-  .play-card-container { height: auto !important; min-height: 250px !important; max-height: 45vh !important; }
-  .play-choices-container { margin-top: 1rem !important; gap: 0.5rem !important; }
-  .play-choice-btn { padding: 1rem 0.5rem !important; }
-  .choice-text { font-size: 0.9rem !important; }
-
-  /* สำหรับย่อขนาดหน้าตั้งค่าใน Editor */
-  .manage-header { flex-direction: column !important; align-items: stretch !important; gap: 0.5rem !important; }
-  .manage-header button { width: 100% !important; margin-top: 0.5rem; }
-  .settings-panel { padding: 1rem !important; }
-  .settings-panel h2 { font-size: 1.3rem !important; margin-bottom: 1rem !important; }
-  .settings-panel h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
-  .settings-pillar-box { padding: 1rem !important; }
 }
 
-/* Typography */
-h1, h2, h3, h4 {
-  font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 1rem;
-}
+export async function PUT(request) {
+  try {
+    const data = await request.json();
+    const { 
+      id, end_leg_0, end_leg_100, end_exe_0, end_exe_100, end_jud_0, end_jud_100, end_mil_0, end_mil_100, end_victory, credits, is_published, game_title,
+      pillar_1_name, pillar_1_icon, pillar_2_name, pillar_2_icon, pillar_3_name, pillar_3_icon, pillar_4_name, pillar_4_icon,
+      intro_title, intro_desc, intro_choice_a, intro_choice_b, intro_image_url,
+      bg_image_url, crisis_color, resolution_color, pillar_1_color, pillar_2_color, pillar_3_color, pillar_4_color
+    } = data;
 
-.text-gradient {
-  background: linear-gradient(to right, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+    if (!id) return NextResponse.json({ error: 'Group ID is required' }, { status: 400 });
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    // NOTE: max_crisis_val and max_resolution_val are intentionally NOT updated here.
+    // They are managed exclusively by the Admin Dashboard to prevent students from overriding teacher settings.
+    await db.run(`
+      UPDATE groups SET
+        end_leg_0 = ?, end_leg_100 = ?,
+        end_exe_0 = ?, end_exe_100 = ?,
+        end_jud_0 = ?, end_jud_100 = ?,
+        end_mil_0 = ?, end_mil_100 = ?,
+        end_victory = ?, credits = ?, is_published = ?, game_title = ?,
+        pillar_1_name = ?, pillar_1_icon = ?, pillar_2_name = ?, pillar_2_icon = ?,
+        pillar_3_name = ?, pillar_3_icon = ?, pillar_4_name = ?, pillar_4_icon = ?,
+        intro_title = ?, intro_desc = ?, intro_choice_a = ?, intro_choice_b = ?, intro_image_url = ?,
+        bg_image_url = ?, crisis_color = ?, resolution_color = ?, 
+        pillar_1_color = ?, pillar_2_color = ?, pillar_3_color = ?, pillar_4_color = ?
+      WHERE id = ?
+    `, [
+      end_leg_0 || '', end_leg_100 || '',
+      end_exe_0 || '', end_exe_100 || '',
+      end_jud_0 || '', end_jud_100 || '',
+      end_mil_0 || '', end_mil_100 || '',
+      end_victory || '', credits || '', is_published ? 1 : 0, game_title || '',
+      pillar_1_name || 'สภา', pillar_1_icon || '🏛️', pillar_2_name || 'บริหาร', pillar_2_icon || '💼',
+      pillar_3_name || 'ศาล', pillar_3_icon || '⚖️', pillar_4_name || 'ทหาร', pillar_4_icon || '🎖️',
+      intro_title || '', intro_desc || '', intro_choice_a || '', intro_choice_b || '', intro_image_url || '',
+      bg_image_url || '', crisis_color || '#ef4444', resolution_color || '#eab308',
+      pillar_1_color || '#60a5fa', pillar_2_color || '#a78bfa', pillar_3_color || '#fbbf24', pillar_4_color || '#34d399',
+      id
+    ]);
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-/* Added Background & Home Styles */
-.bg-abstract {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.08), transparent 25%),
-                    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-  z-index: -1;
-}
-
-.home-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 2rem;
-}
-
-.card-option {
-  padding: 2rem;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s;
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.card-option:hover {
-  transform: translateY(-5px);
-  border-color: var(--primary);
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
-}
-
-.icon-large {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
-
-@media (max-width: 768px) {
-  .container { padding: 1rem; }
-  .pillars-container { padding: 0.5rem !important; margin-bottom: 1rem !important; }
-  .pillar-bar { width: 48% !important; padding: 0.4rem 0.5rem !important; margin-bottom: 0.5rem !important; border-radius: 8px !important; }
-  .pillar-icon { font-size: 1.2rem !important; margin-right: 0.4rem !important; }
-  .pillar-name, .pillar-value { font-size: 0.75rem !important; }
-  
-  .play-card-container { 
-    height: auto !important; 
-    min-height: 250px !important; 
-    max-height: 45vh !important; 
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  .play-choices-container { margin-top: 1rem !important; gap: 0.5rem !important; }
-  .play-choice-btn { padding: 1rem 0.5rem !important; }
-  .choice-text { font-size: 0.9rem !important; }
 }
 
-.choice-text { white-space: pre-wrap; word-wrap: break-word; word-break: break-word; }
-.play-card-container h2, .play-card-container p { white-space: pre-wrap; word-wrap: break-word; word-break: break-word; }
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const name = searchParams.get('name');
+  const published = searchParams.get('published');
+  const all = searchParams.get('all');
+  
+  try {
+    if (all === 'true') {
+      const groups = await db.all('SELECT id, name, game_title, is_published, credits FROM groups ORDER BY created_at DESC');
+      return NextResponse.json(groups);
+    }
+    
+    if (published === 'true') {
+      const groups = await db.all('SELECT id, name, game_title, credits FROM groups WHERE is_published = 1 ORDER BY created_at DESC');
+      return NextResponse.json(groups);
+    }
+    
+    if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    const group = await db.get('SELECT * FROM groups WHERE name = ?', [name]);
+    if (!group) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(group);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
