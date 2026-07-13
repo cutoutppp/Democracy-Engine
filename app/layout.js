@@ -17,6 +17,9 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <div className="bg-abstract"></div>
         {children}
+        <div style={{ position: 'fixed', bottom: '10px', right: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 9999, fontFamily: 'monospace' }}>
+          v1.2.0
+        </div>
       </body>
     </html>
   )

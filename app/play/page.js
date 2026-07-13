@@ -8,12 +8,14 @@ import { initAudio, playSwipe, playGameOver, playVictory } from '@/lib/audio';
 // with buttons or basic CSS transform for now to keep it lightweight.
 
 export default function Play() {
-  const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState('');
   const [cards, setCards] = useState([]);
   const [gameState, setGameState] = useState('menu'); // menu, playing, gameover, victory
   
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  
+  const [unplayedCards, setUnplayedCards] = useState([]);
+  const [resolutionCooldown, setResolutionCooldown] = useState(0);
   
   const [pillars, setPillars] = useState({
     legislative: 50,
@@ -21,8 +23,6 @@ export default function Play() {
     judiciary: 50,
     military: 50
   });
-  const [isClient, setIsClient] = useState(false);
-  const [audioContext, setAudioContext] = useState(null);
   const [isHardMode, setIsHardMode] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
@@ -107,13 +107,19 @@ export default function Play() {
         choice_b_legislative: 0, choice_b_executive: 0, choice_b_judiciary: 0, choice_b_military: 0
       };
 
-      // Play max 20 cards total (1 mode select + 1 intro + 18 random)
-      const gameCards = [modeSelectCard, introCard, ...shuffled.slice(0, 18)];
-      setCards(gameCards);
+      // Initial hand: we start with modeSelect and intro, plus 1 gameplay card
+      const initialGameCards = [modeSelectCard, introCard];
+      if (shuffled.length > 0) {
+        initialGameCards.push(shuffled.pop());
+      }
+
+      setUnplayedCards(shuffled);
+      setResolutionCooldown(0);
+      setCards(initialGameCards);
       
       // Preload images in the background
       setTimeout(() => {
-        gameCards.forEach(c => {
+        [...initialGameCards, ...shuffled].forEach(c => {
           if (c.image_url && c.image_url.startsWith('http')) {
             const img = new window.Image();
             img.src = c.image_url;
@@ -143,10 +149,12 @@ export default function Play() {
     if (!card) return; // Safety check
     
     let p = { ...pillars };
+    let newIsHardMode = isHardMode;
 
     // Set difficulty on mode select card
     if (card.id === 'mode_select') {
-      setIsHardMode(choice === 'B');
+      newIsHardMode = choice === 'B';
+      setIsHardMode(newIsHardMode);
     }
 
     // Ping API (silently)
@@ -155,6 +163,15 @@ export default function Play() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ card_id: card.id, choice })
+      }).catch(e => console.error(e));
+    }
+
+    // Count a new game session when the intro card is acknowledged
+    if (card.id === 'intro' && groupData?.id) {
+      fetch('/api/cards/stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game_start: true, group_id: groupData.id })
       }).catch(e => console.error(e));
     }
 
@@ -235,11 +252,45 @@ export default function Play() {
     if (p.military <= 0) { setEndReason(groupData.end_mil_0 || `${pillar4}แตกกำลังใจ ประเทศไร้การป้องกัน`); setGameState('gameover'); playGameOver(); return; }
     if (p.military >= 100) { setEndReason(groupData.end_mil_100 || `${pillar4}ยึดอำนาจ รัฐประหารเกิดขึ้น`); setGameState('gameover'); playGameOver(); return; }
 
-    if (currentCardIndex + 1 >= cards.length) {
+    const maxGameTurns = 20; // 1 mode + 1 intro + 18 gameplay
+
+    if (currentCardIndex + 1 >= maxGameTurns || (unplayedCards.length === 0 && currentCardIndex + 1 >= cards.length)) {
       setEndReason(groupData.end_victory || 'คุณผ่านพ้นทุกวิกฤตได้อย่างยอดเยี่ยม! ประเทศยังคงดำรงอยู่ด้วยความสมดุล');
       setGameState('victory');
       playVictory();
     } else {
+      if (currentCardIndex + 1 >= cards.length) {
+        // Dynamic Generation Logic
+        let nextCard = null;
+        let isCritical = p.legislative <= 25 || p.legislative >= 75 || p.executive <= 25 || p.executive >= 75 || p.judiciary <= 25 || p.judiciary >= 75 || p.military <= 25 || p.military >= 75;
+
+        let drawResolution = false;
+        if (isCritical && resolutionCooldown <= 0) {
+           drawResolution = true;
+        }
+
+        let updatedUnplayed = [...unplayedCards];
+
+        if (drawResolution) {
+            const resIdx = updatedUnplayed.findIndex(c => c.card_type === 'resolution');
+            if (resIdx !== -1) {
+                nextCard = updatedUnplayed.splice(resIdx, 1)[0];
+                setResolutionCooldown(2);
+            } else {
+                nextCard = updatedUnplayed.pop();
+                setResolutionCooldown(prev => Math.max(0, prev - 1));
+            }
+        } else {
+            nextCard = updatedUnplayed.pop();
+            setResolutionCooldown(prev => Math.max(0, prev - 1));
+        }
+
+        setUnplayedCards(updatedUnplayed);
+        
+        if (nextCard) {
+            setCards(prev => [...prev, nextCard]);
+        }
+      }
       setCurrentCardIndex(prev => prev + 1);
     }
   };
@@ -442,7 +493,7 @@ export default function Play() {
         <PillarBar name={groupData?.pillar_4_name || 'ทหาร'} value={pillars.military} color="var(--military-color)" icon={groupData?.pillar_4_icon || '🎖️'} impact={(!isHardMode && hoverChoice === 'A') ? currentCard?.choice_a_military : (!isHardMode && hoverChoice === 'B') ? currentCard?.choice_b_military : 0} />
       </div>
 
-      <div style={{ marginBottom: '0.5rem', color: 'var(--text-muted)', flexShrink: 0 }}>เทิร์นที่ {currentCardIndex + 1} / {cards.length}</div>
+      <div style={{ marginBottom: '0.5rem', color: 'var(--text-muted)', flexShrink: 0 }}>เทิร์นที่ {currentCardIndex + 1} / 20</div>
 
       {/* The Card */}
       <div 

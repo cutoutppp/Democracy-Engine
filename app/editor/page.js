@@ -223,8 +223,8 @@ export default function Editor() {
 
   const validateCard = () => {
     const errs = [];
-    const maxSum = formData.card_type === 'resolution' ? 20 : 10;
-    const maxIndividual = formData.card_type === 'resolution' ? (groupData?.max_resolution_val || 30) : (groupData?.max_crisis_val || 20); // จำกัดค่าสูงสุด/ต่ำสุดรายเสา
+    const maxSum = formData.card_type === 'resolution' ? 10 : 5;
+    const maxIndividual = formData.card_type === 'resolution' ? 20 : 10; // จำกัดค่าสูงสุด/ต่ำสุดรายเสา
 
     const aValues = [formData.choice_a_legislative, formData.choice_a_executive, formData.choice_a_judiciary, formData.choice_a_military];
     const aSum = aValues.reduce((a,b) => a + Number(b), 0);
@@ -433,7 +433,7 @@ export default function Editor() {
   }, [groupData, activeTab]);
 
   const renderBalanceBar = (choice) => {
-    const maxAllowed = formData.card_type === 'resolution' ? 20 : 10;
+    const maxAllowed = formData.card_type === 'resolution' ? 10 : 5;
     const prefix = choice === 'A' ? 'choice_a' : 'choice_b';
     const sum = Number(formData[`${prefix}_legislative`]) + Number(formData[`${prefix}_executive`]) + Number(formData[`${prefix}_judiciary`]) + Number(formData[`${prefix}_military`]);
     const isOver = sum > maxAllowed;
@@ -457,7 +457,7 @@ export default function Editor() {
   };
 
   const renderSlider = (label, name, color) => {
-    const maxVal = formData.card_type === 'resolution' ? (groupData.max_resolution_val || 30) : (groupData.max_crisis_val || 20);
+    const maxVal = formData.card_type === 'resolution' ? 20 : 10;
     return (
     <div style={{ marginBottom: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', alignItems: 'center' }}>
@@ -756,6 +756,12 @@ export default function Editor() {
               className="btn-primary" 
               style={{ background: '#8b5cf6' }}>
               🔗 คัดลอกลิงก์เกม
+            </button>
+            <button
+              onClick={() => window.open('/dashboard', '_blank')}
+              className="btn-primary"
+              style={{ background: '#0d9488' }}>
+              📊 Dashboard
             </button>
             {groupData.is_published ? (
               <button disabled className="btn-primary" style={{ background: '#10b981', cursor: 'default' }}>
