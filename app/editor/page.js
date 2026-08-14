@@ -537,7 +537,7 @@ export default function Editor() {
               <form onSubmit={handleLoginSubmit}>
                 <input 
                   type="password" placeholder="ใส่รหัสผ่านกลุ่ม..." className="input-field" 
-                  value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required 
+                  value={loginPassword} onChange={e => setLoginPassword(e.target.value)} 
                 />
                 {loginError && <p style={{ color: 'var(--danger)', marginTop: '0.5rem' }}>{loginError}</p>}
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
@@ -558,17 +558,17 @@ export default function Editor() {
                 <label style={{ display: 'block', marginBottom: '0.5rem' }}>ชื่อกลุ่มผู้พัฒนา</label>
                 <input 
                   type="text" placeholder="เช่น กลุ่ม 1 ห้อง 6/1" className="input-field" style={{ marginBottom: '1.5rem' }}
-                  value={createData.name} onChange={e => setCreateData({...createData, name: e.target.value})} required 
+                  value={createData.name} onChange={e => setCreateData({...createData, name: e.target.value})} 
                 />
                 <label style={{ display: 'block', marginBottom: '0.5rem' }}>ชื่อเกมของคุณ</label>
                 <input 
                   type="text" placeholder="เช่น Democracy: The Crisis" className="input-field" style={{ marginBottom: '1.5rem' }}
-                  value={createData.game_title} onChange={e => setCreateData({...createData, game_title: e.target.value})} required 
+                  value={createData.game_title} onChange={e => setCreateData({...createData, game_title: e.target.value})} 
                 />
                 <label style={{ display: 'block', marginBottom: '0.5rem' }}>ตั้งรหัสผ่าน</label>
                 <input 
                   type="password" placeholder="เพื่อป้องกันกลุ่มอื่นเข้ามาแก้ไข" className="input-field" 
-                  value={createData.password} onChange={e => setCreateData({...createData, password: e.target.value})} required 
+                  value={createData.password} onChange={e => setCreateData({...createData, password: e.target.value})} 
                 />
                 
                 {loginError && <p style={{ color: 'var(--danger)', marginTop: '0.5rem' }}>{loginError}</p>}
@@ -646,7 +646,7 @@ export default function Editor() {
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>หัวข้อเหตุการณ์</label>
-                <input type="text" name="title" value={formData.title} onChange={handleInputChange} className="input-field" required placeholder="เช่น ม็อบประท้วงเรียกร้องขึ้นค่าแรง" />
+                <input type="text" name="title" value={formData.title} onChange={handleInputChange} className="input-field" placeholder="เช่น ม็อบประท้วงเรียกร้องขึ้นค่าแรง" />
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
@@ -666,7 +666,7 @@ export default function Editor() {
               {/* Choice A with Sliders */}
               <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                 <h3 style={{ color: '#60a5fa' }}>ตัวเลือก A (ปัดซ้าย)</h3>
-                <input type="text" name="choice_a_text" value={formData.choice_a_text} onChange={handleInputChange} className="input-field" required placeholder="ข้อความตัวเลือก เช่น ใช้ความรุนแรงปราบปราม" style={{ marginBottom: '1.5rem' }} />
+                <input type="text" name="choice_a_text" value={formData.choice_a_text} onChange={handleInputChange} className="input-field" placeholder="ข้อความตัวเลือก เช่น ใช้ความรุนแรงปราบปราม" style={{ marginBottom: '1.5rem' }} />
                 {renderSlider(`${settings.pillar_1_icon || '🏛️'} ${settings.pillar_1_name || 'สภา'}`, 'choice_a_legislative', 'var(--legislative-color)')}
                 {renderSlider(`${settings.pillar_2_icon || '💼'} ${settings.pillar_2_name || 'บริหาร'}`, 'choice_a_executive', 'var(--executive-color)')}
                 {renderSlider(`${settings.pillar_3_icon || '⚖️'} ${settings.pillar_3_name || 'ศาล'}`, 'choice_a_judiciary', 'var(--judiciary-color)')}
@@ -678,7 +678,7 @@ export default function Editor() {
               {/* Choice B with Sliders */}
               <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                 <h3 style={{ color: '#a78bfa' }}>ตัวเลือก B (ปัดขวา)</h3>
-                <input type="text" name="choice_b_text" value={formData.choice_b_text} onChange={handleInputChange} className="input-field" required placeholder="ข้อความตัวเลือก เช่น ยอมเจรจาและเพิ่มค่าแรง" style={{ marginBottom: '1.5rem' }} />
+                <input type="text" name="choice_b_text" value={formData.choice_b_text} onChange={handleInputChange} className="input-field" placeholder="ข้อความตัวเลือก เช่น ยอมเจรจาและเพิ่มค่าแรง" style={{ marginBottom: '1.5rem' }} />
                 {renderSlider(`${settings.pillar_1_icon || '🏛️'} ${settings.pillar_1_name || 'สภา'}`, 'choice_b_legislative', 'var(--legislative-color)')}
                 {renderSlider(`${settings.pillar_2_icon || '💼'} ${settings.pillar_2_name || 'บริหาร'}`, 'choice_b_executive', 'var(--executive-color)')}
                 {renderSlider(`${settings.pillar_3_icon || '⚖️'} ${settings.pillar_3_name || 'ศาล'}`, 'choice_b_judiciary', 'var(--judiciary-color)')}
@@ -786,40 +786,40 @@ export default function Editor() {
               
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ color: 'white' }}>🎮 ชื่อเกม (Game Title)</h3>
-                <input type="text" name="game_title" value={settings.game_title} onChange={handleSettingChange} className="input-field" required />
+                <input type="text" name="game_title" value={settings.game_title} onChange={handleSettingChange} className="input-field" />
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ color: 'white' }}>📝 เครดิตผู้สร้าง (Credits)</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>รายชื่อนักเรียนในกลุ่ม จะแสดงตอนจบเกม</p>
-                <textarea name="credits" value={settings.credits} onChange={handleSettingChange} className="input-field" rows="2" placeholder="เช่น ด.ช.สมชาย ด.ญ.สมหญิง ชั้น ม.6/1" required></textarea>
+                <textarea name="credits" value={settings.credits} onChange={handleSettingChange} className="input-field" rows="2" placeholder="เช่น ด.ช.สมชาย ด.ญ.สมหญิง ชั้น ม.6/1"></textarea>
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
                 <h3 style={{ color: 'var(--success)' }}>🏆 ฉากจบชนะ (เล่นรอดครบ 20 เทิร์น)</h3>
-                <input type="text" name="end_victory" value={settings.end_victory} onChange={handleSettingChange} className="input-field" required />
+                <input type="text" name="end_victory" value={settings.end_victory} onChange={handleSettingChange} className="input-field" />
               </div>
               <hr style={{ border: '1px solid rgba(255,255,255,0.1)', marginBottom: '2rem' }} />
               <div className="grid-2">
                 <div>
                   <h3 style={{ color: 'var(--legislative-color)' }}>{settings.pillar_1_icon || '🏛️'} {settings.pillar_1_name || 'นิติบัญญัติ (สภา)'}</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_1_name || 'สภา'} เหลือ 0%</label><input type="text" name="end_leg_0" value={settings.end_leg_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_1_name || 'สภา'} เต็ม 100%</label><input type="text" name="end_leg_100" value={settings.end_leg_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_1_name || 'สภา'} เหลือ 0%</label><input type="text" name="end_leg_0" value={settings.end_leg_0} onChange={handleSettingChange} className="input-field" /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_1_name || 'สภา'} เต็ม 100%</label><input type="text" name="end_leg_100" value={settings.end_leg_100} onChange={handleSettingChange} className="input-field" /></div>
                 </div>
                 <div>
                   <h3 style={{ color: 'var(--executive-color)' }}>{settings.pillar_2_icon || '💼'} {settings.pillar_2_name || 'บริหาร (รัฐบาล)'}</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_2_name || 'บริหาร'} เหลือ 0%</label><input type="text" name="end_exe_0" value={settings.end_exe_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_2_name || 'บริหาร'} เต็ม 100%</label><input type="text" name="end_exe_100" value={settings.end_exe_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_2_name || 'บริหาร'} เหลือ 0%</label><input type="text" name="end_exe_0" value={settings.end_exe_0} onChange={handleSettingChange} className="input-field" /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_2_name || 'บริหาร'} เต็ม 100%</label><input type="text" name="end_exe_100" value={settings.end_exe_100} onChange={handleSettingChange} className="input-field" /></div>
                 </div>
                 <div>
                   <h3 style={{ color: 'var(--judiciary-color)' }}>{settings.pillar_3_icon || '⚖️'} {settings.pillar_3_name || 'ตุลาการ (ศาล)'}</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_3_name || 'ศาล'} เหลือ 0%</label><input type="text" name="end_jud_0" value={settings.end_jud_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_3_name || 'ศาล'} เต็ม 100%</label><input type="text" name="end_jud_100" value={settings.end_jud_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_3_name || 'ศาล'} เหลือ 0%</label><input type="text" name="end_jud_0" value={settings.end_jud_0} onChange={handleSettingChange} className="input-field" /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_3_name || 'ศาล'} เต็ม 100%</label><input type="text" name="end_jud_100" value={settings.end_jud_100} onChange={handleSettingChange} className="input-field" /></div>
                 </div>
                 <div>
                   <h3 style={{ color: 'var(--military-color)' }}>{settings.pillar_4_icon || '🎖️'} {settings.pillar_4_name || 'ทหาร (กองทัพ)'}</h3>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_4_name || 'ทหาร'} เหลือ 0%</label><input type="text" name="end_mil_0" value={settings.end_mil_0} onChange={handleSettingChange} className="input-field" required /></div>
-                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_4_name || 'ทหาร'} เต็ม 100%</label><input type="text" name="end_mil_100" value={settings.end_mil_100} onChange={handleSettingChange} className="input-field" required /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_4_name || 'ทหาร'} เหลือ 0%</label><input type="text" name="end_mil_0" value={settings.end_mil_0} onChange={handleSettingChange} className="input-field" /></div>
+                  <div style={{ marginBottom: '1rem' }}><label style={{ fontSize: '0.85rem' }}>ค่า {settings.pillar_4_name || 'ทหาร'} เต็ม 100%</label><input type="text" name="end_mil_100" value={settings.end_mil_100} onChange={handleSettingChange} className="input-field" /></div>
                 </div>
               </div>
 
@@ -827,11 +827,11 @@ export default function Editor() {
               <h2 style={{ marginBottom: '2rem', textAlign: 'center', color: '#60a5fa' }}>ตั้งค่าการ์ดใบแรก (Intro Card)</h2>
               <div style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>หัวข้อการ์ดใบแรก</h3>
-                <input type="text" name="intro_title" value={settings.intro_title || ''} onChange={handleSettingChange} className="input-field" required />
+                <input type="text" name="intro_title" value={settings.intro_title || ''} onChange={handleSettingChange} className="input-field" />
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>เนื้อเรื่องเกริ่นนำ</h3>
-                <textarea name="intro_desc" value={settings.intro_desc || ''} onChange={handleSettingChange} className="input-field" rows="3" required></textarea>
+                <textarea name="intro_desc" value={settings.intro_desc || ''} onChange={handleSettingChange} className="input-field" rows="3"></textarea>
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>รูปภาพประกอบการ์ดใบแรก</h3>
@@ -841,11 +841,11 @@ export default function Editor() {
               <div className="grid-2">
                 <div>
                   <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>ข้อความตัวเลือก A (ซ้าย)</h3>
-                  <input type="text" name="intro_choice_a" value={settings.intro_choice_a || ''} onChange={handleSettingChange} className="input-field" required />
+                  <input type="text" name="intro_choice_a" value={settings.intro_choice_a || ''} onChange={handleSettingChange} className="input-field" />
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>ข้อความตัวเลือก B (ขวา)</h3>
-                  <input type="text" name="intro_choice_b" value={settings.intro_choice_b || ''} onChange={handleSettingChange} className="input-field" required />
+                  <input type="text" name="intro_choice_b" value={settings.intro_choice_b || ''} onChange={handleSettingChange} className="input-field" />
                 </div>
               </div>
 
@@ -1027,3 +1027,5 @@ export default function Editor() {
     </div>
   );
 }
+
+

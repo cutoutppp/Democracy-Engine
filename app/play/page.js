@@ -447,8 +447,11 @@ export default function Play() {
       padding: '1rem',
       height: '100vh',
       overflow: 'hidden',
-      background: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url(${groupData.bg_image_url}) no-repeat center center fixed` : undefined,
+      backgroundImage: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url('${groupData.bg_image_url}')` : undefined,
       backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      backgroundRepeat: 'no-repeat',
       position: 'relative'
     }}>
       {/* Exit Button */}
