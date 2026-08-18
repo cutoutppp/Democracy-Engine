@@ -532,7 +532,7 @@ export default function Play() {
       >
         {currentCard?.image_url && (
           <div className="card-image-wrapper" style={{ height: '180px', width: '100%', flexShrink: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <img src={currentCard?.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={currentCard?.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
         )}
 
