@@ -221,7 +221,7 @@ h1, h2, h3, h4 {
   .pillar-icon { font-size: 1.2rem !important; margin-right: 0.4rem !important; }
   .pillar-name, .pillar-value { font-size: 0.75rem !important; }
 
-  .play-card-container { height: auto !important; min-height: 250px !important; max-height: 45vh !important; }
+  .play-card-container { height: auto !important; min-height: 250px !important; max-height: 55vh !important; }
   .play-choices-container { margin-top: 1rem !important; gap: 0.5rem !important; }
   .play-choice-btn { padding: 1rem 0.5rem !important; }
   .choice-text { font-size: 0.9rem !important; }

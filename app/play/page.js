@@ -356,7 +356,7 @@ export default function Play() {
     return (
       <div className="container flex-center animate-fade-in" style={{ 
         minHeight: '100vh', padding: '2rem',
-        background: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url(${groupData.bg_image_url}) no-repeat center center fixed` : undefined,
+        background: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.7)), url(${groupData.bg_image_url}) no-repeat center center fixed` : undefined,
         backgroundSize: 'cover'
       }}>
         {groupData && (
@@ -447,7 +447,7 @@ export default function Play() {
       padding: '1rem',
       height: '100vh',
       overflow: 'hidden',
-      backgroundImage: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95)), url('${groupData.bg_image_url}')` : undefined,
+      backgroundImage: groupData?.bg_image_url ? `linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.7)), url('${groupData.bg_image_url}')` : undefined,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
@@ -530,15 +530,13 @@ export default function Play() {
           touchAction: 'pan-y'
         }}
       >
-        <div style={{ aspectRatio: '3/2', width: '100%', flexShrink: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {currentCard?.image_url ? (
+        {currentCard?.image_url && (
+          <div className="card-image-wrapper" style={{ height: '180px', width: '100%', flexShrink: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             <img src={currentCard?.image_url} alt="card image" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <span style={{ color: 'var(--secondary)', fontSize: '4rem' }}>❓</span>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div style={{ padding: '1.5rem', background: 'var(--bg-dark)', flexShrink: 0 }}>
+        <div style={{ padding: '1.5rem', background: 'var(--bg-dark)', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h2 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>{currentCard?.title}</h2>
           <p style={{ color: 'var(--text-muted)' }}>{currentCard?.description}</p>
         </div>
